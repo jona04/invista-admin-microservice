@@ -3,7 +3,7 @@ version: '3'
 services:
   users_backend:
     build: . 
-    image: invista/users:0.0.3
+    image: invista/users:0.0.4
     environment:
       DB_HOST: 34.95.212.65
       DB_PORT: 5432
