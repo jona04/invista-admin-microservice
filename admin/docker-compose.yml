@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  admin_backend:
+    build: . 
+    command: "python manage.py runserver 0.0.0.0:8000"
+    container_name: admin-ms
+    volumes:
+      - .:/app
+    ports:
+      - 8002:8000
+    depends_on:
+      - admin_db
+      - admin_redis
+    networks:
+      - admin
+      - users
+
+  admin_queue:
+    build: .
+    command: "python consumer.py"
+    depends_on:
+      - admin_db
+    networks:
+      - admin
+
+  admin_db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: admin
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: a
+    volumes:
+      - .dbdata:/var/lib/postgres
+    ports:
+      - 5436:5432
+    networks:
+      - admin
+
+  admin_redis:
+    image: redis
+    ports: 
+      - 6379:6379
+    networks:
+      - admin
+
+networks:
+  admin:
+  users:
+    external:
+      name: users

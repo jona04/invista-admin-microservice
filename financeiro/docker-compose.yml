@@ -1,0 +1,52 @@
+version: '3.9'
+
+services:
+  financeiro_backend:
+    build: . 
+    command: "python manage.py runserver 0.0.0.0:8000"
+    container_name: financeiro-ms
+    volumes:
+      - .:/app
+    ports:
+      - 8003:8000
+    depends_on:
+      - financeiro_db
+      - financeiro_redis
+    networks:
+      - financeiro
+      - users
+
+  financeiro_queue:
+    build: .
+    command: "python consumer.py"
+    depends_on:
+      - financeiro_db
+    networks:
+      - financeiro
+
+  financeiro_db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: financeiro
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: a
+    volumes:
+      - .dbdata:/var/lib/postgres
+    ports:
+      - 5437:5432
+    networks:
+      - financeiro
+
+  financeiro_redis:
+    image: redis
+    ports: 
+      - 6380:6379
+    networks:
+      - financeiro
+
+networks:
+  financeiro:
+  users:
+    external:
+      name: users
