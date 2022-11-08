@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  admin_backend:
+    build: . 
+    command: "python manage.py runserver 0.0.0.0:8000"
+    container_name: admin-ms
+    image: invista/admin:0.0.1
+    environment:
+      BOOTSTRAP_SERVERS: pkc-ldjyd.southamerica-east1.gcp.confluent.cloud:9092
+      SECURITY_PROTOCOL: SASL_SSL
+      SASL_USERNAME: MABSYUGWW23PZAFB
+      SASL_PASSWORD: ZgFhk8CANir6A17SoxYlv2Pz4ReQAROtrr1yIYVBHIcFGWG+xyP5+xDWxFFqz2lA
+      SASL_MECHANISM: PLAIN
+      GROUP_ID: myGroup
+      KAFKA_TOPIC: admin_topic
+    ports:
+      - 8002:8000
+    depends_on:
+      - admin_db
+      - admin_redis
+    networks:
+      - admin
+      - users
+
+  admin_queue:
+    build: .
+    command: "python consumer.py"
+    depends_on:
+      - admin_db
+    networks:
+      - admin
+
+  admin_db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_DB: admin
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: a
+    volumes:
+      - .dbdata:/var/lib/postgres
+    ports:
+      - 5436:5432
+    networks:
+      - admin
+
+  admin_redis:
+    image: redis
+    ports: 
+      - 6379:6379
+    networks:
+      - admin
+
+networks:
+  admin:
+  users:
+    external:
+      name: users
