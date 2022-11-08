@@ -21,12 +21,18 @@ spec:
             - name: DB_HOST
               value: 34.95.212.65
             - name: DB_PASSWORD
-              value: nfjy1994
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_PASSWORD
             - name: DB_PORT
               value: "5432"
             - name: DB_USERNAME
-              value: postgres
-          image: invista/users:0.0.1
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_USERNAME
+          image: invista/users:0.0.4
           name: users-backend
           ports:
             - containerPort: 8000

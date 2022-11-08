@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  users_backend:
+  users-backend:
     build: . 
     image: invista/users:0.0.4
     environment:
