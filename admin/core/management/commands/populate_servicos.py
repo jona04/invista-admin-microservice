@@ -14,7 +14,6 @@ class Command(BaseCommand):
                 chapa =  servico.chapa,
                 quantidade = servico.quantidade,
                 created_at = servico.created_at,
-                uploaded_at = servico.uploaded_at,
-                valor_total_servico = servico.valor_total_servico
+                uploaded_at = servico.uploaded_at
             )
 

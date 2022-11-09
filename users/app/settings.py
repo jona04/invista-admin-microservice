@@ -125,4 +125,4 @@ CORS_ALLOW_CREDENTIALS = (
     True  # enables the frontend to get the cookies created by the backend
 )
 
-# FORCE_SCRIPT_NAME = '/api/users/'
+FORCE_SCRIPT_NAME = '/api/users/'

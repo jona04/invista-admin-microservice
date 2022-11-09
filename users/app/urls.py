@@ -18,7 +18,7 @@ from django.urls import path, include
 from .views import success
 
 urlpatterns = [
-    # path('', success),
+    path('', success),
     path("admin/", admin.site.urls),
     path('api/', include('core.urls'))
 ]

@@ -78,7 +78,7 @@ class Servico(models.Model):
     quantidade = models.IntegerField("Quantidade", null=False)
     created_at = models.DateTimeField("Criado em", auto_now_add=True, null=True)
     uploaded_at = models.DateTimeField("Atualizado em", auto_now=True, null=True)
-    valor_total_servico = models.FloatField("Total", blank=True, default=0.0)
+    valor_total_servico = models.FloatField("Total", null=True, blank=True, default=0.0)
 
     def __str__(self):
         return self.nome
@@ -100,7 +100,7 @@ class Nota(models.Model):
     uploaded_at = models.DateTimeField("Atualizado em", auto_now=True, null=True)
     obs = models.TextField("Observações", null=True, blank=True)
     servico = models.ManyToManyField(Servico, through="GrupoNotaServico", null=True)
-    valor_total_nota = models.FloatField("Total", blank=True, default=0.0)
+    valor_total_nota = models.FloatField("Total", null=True, blank=True, default=0.0)
 
     def __str__(self):
         return str(self.numero)
@@ -153,4 +153,3 @@ class GrupoNotaServico(models.Model):
             cliente = cliente,
             nota = nota
         )
-        # cliente.nota.add(self.nota)

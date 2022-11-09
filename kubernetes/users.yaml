@@ -32,7 +32,7 @@ spec:
                 secretKeyRef:
                   name: database-secrets
                   key: DB_USERNAME
-          image: invista/users:0.0.4
+          image: invista/users:0.0.5
           name: users-backend
           ports:
             - containerPort: 8000
