@@ -1,14 +1,13 @@
 import math
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+from rest_framework import generics, mixins
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from django.core.cache import cache
 from rest_framework.views import APIView, Response
-import requests
+from datetime import date, datetime, timedelta
+from collections import Counter
 
-from core.models import Servico
-from .serializers import ServicoSerializer
+from core.models import Servico, Nota
+from .serializers import ServicoSerializer, ServicoFastSerializer, NotaFastSerializer
 from .services import UserService
 
 class RegisterApiView(APIView):
@@ -16,9 +15,9 @@ class RegisterApiView(APIView):
         data = request.data
         data['is_financeiro'] = True
         
-        response = requests.post('http://172.17.0.1:8001/api/register', data)
+        response = UserService.post('register', data=data)
 
-        return Response(response.json())
+        return Response(response)
 
 
 class LoginApiView(APIView):
@@ -56,7 +55,6 @@ class LogoutAPIView(APIView):
 
 
 class ServicoFrontendAPIView(APIView):
-    @method_decorator(cache_page(60*60*2, key_prefix='servicos_frontend'))
     def get(self, _):
         servicos = Servico.objects.all()
         serializer = ServicoSerializer(servicos, many=True)
@@ -65,14 +63,12 @@ class ServicoFrontendAPIView(APIView):
 
 class ServicoBackendAPIView(APIView):
     def get(self, request):
-        serializer = cache.get('servicos_backend')
-        if not serializer:
-            servicos = list(Servico.objects.all())
-            
-            serializer = ServicoSerializer(servicos, many=True).data
-            cache.set('servicos_backend', serializer, timeout=60*30) #30min
-        
-        s = request.query_params.get('s', '')
+
+        start_date = datetime.now() - timedelta(30)
+        servicos = Servico.objects.filter(created_at__range=(start_date.date(), date.today()))
+        serializer = ServicoFastSerializer(servicos, many=True).data
+
+        s = request.query_params.get('s', None)
         if s:
             serializer = list([
                 p for p in serializer
@@ -89,17 +85,100 @@ class ServicoBackendAPIView(APIView):
         elif sort == 'desc':
             serializer.sort(key=lambda p: p['created_at'], reverse=True)
 
-        per_page = 9
+        per_page = total
         page = int(request.query_params.get('page', 1))
         start = (page - 1) * per_page
         end = page * per_page
 
         data = serializer[start:end]
+        for d in data:
+            created_at = d['created_at']
+            created_at_date = datetime.strptime(created_at,'%Y-%m-%dT%H:%M:%S.%fZ')
+            new_date = created_at_date.date()
+            d['new_date'] = new_date
+
+        chart_points = []
+        dcounts = Counter(d['new_date'] for d in data)
+        for d, count in dcounts.items():
+            chart_points.append(
+                { 
+                    'x': d, 
+                    'y': count 
+                }
+            )
+        
         return Response({
-            'data': data,
+            'data': chart_points,
             'meta': {
                 'total': total,
                 'page': page,
                 'last_page': math.ceil(total / per_page)
             }
         })
+
+
+class ServicoFastGenericAPIView(generics.GenericAPIView, 
+                        mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin):
+    queryset = Servico.objects.all()[:100]
+    serializer_class = ServicoFastSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+
+        return self.list(request)
+
+
+class NotaBackendAPIView(APIView):
+    def get(self, request):
+
+        start_date = datetime.now() - timedelta(30)
+        servicos = Nota.objects.filter(created_at__range=(start_date.date(), date.today()))
+        serializer = NotaFastSerializer(servicos, many=True).data
+
+        total = len(serializer)
+
+        per_page = total
+        page = int(request.query_params.get('page', 1))
+        start = (page - 1) * per_page
+        end = page * per_page
+
+        data = serializer[start:end]
+        for d in data:
+            created_at = d['created_at']
+            created_at_date = datetime.strptime(created_at,'%Y-%m-%dT%H:%M:%S.%fZ')
+            new_date = created_at_date.date()
+            d['new_date'] = new_date
+
+        chart_points = []
+        dcounts = Counter(d['new_date'] for d in data)
+        for d, count in dcounts.items():
+            chart_points.append(
+                { 
+                    'x': d, 
+                    'y': count 
+                }
+            )
+        
+        return Response({
+            'data': chart_points,
+            'meta': {
+                'total': total,
+                'page': page,
+                'last_page': math.ceil(total / per_page)
+            }
+        })
+
+
+class NotaFastGenericAPIView(generics.GenericAPIView, 
+                        mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin):
+    queryset = Nota.objects.all()[:100]
+    serializer_class = NotaFastSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+
+        return self.list(request)

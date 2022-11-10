@@ -1,7 +1,7 @@
 import requests, os
 
 class UserService:
-    endpoint = os.getenv('USERS_MS') + '/api'
+    endpoint = os.getenv('USERS_MS') + '/api/'
 
     @staticmethod
     def get(path, **kwargs):

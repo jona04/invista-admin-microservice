@@ -82,26 +82,26 @@ WSGI_APPLICATION = 'app.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        "NAME": "financeiro",  # Or path to database file if using sqlite3.
-        "USER": "postgres",
-        "PASSWORD": "a",
-        "HOST": "financeiro_db",  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        "PORT": 5432,  # Set to empty string for default.
+        "NAME": os.getenv('DB_DATABASE'),  # Or path to database file if using sqlite3.
+        "USER": os.getenv('DB_USERNAME'),
+        "PASSWORD": os.getenv('DB_PASSWORD'),
+        "HOST": os.getenv('DB_HOST'),  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        "PORT": os.getenv('DB_PORT'),  # Set to empty string for default.
     },
     "old": {
         "ENGINE": "django.db.backends.postgresql_psycopg2",  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        "NAME": "invista",  # Or path to database file if using sqlite3.
-        "USER": "postgres",
-        "PASSWORD": "a",
-        "HOST": "172.17.0.1",  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        "PORT": 5433,  # Set to empty string for default.
+        "NAME": "ddovnp4rmcdodh",  # Or path to database file if using sqlite3.
+        "USER": "ptxyfilpuuzbxb",
+        "PASSWORD": "034b98845ac9e1df1eaeac0abac1bc0bfe4db1080bf1faaec2e0d275fd15dde8",
+        "HOST": "ec2-3-213-134-196.compute-1.amazonaws.com",  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        "PORT": os.getenv('DB_PORT'),  # Set to empty string for default.
     }
 }
 
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": "redis://financeiro_redis:6379/0",
+        "LOCATION": "redis://redis:6379/0",
         "OPTIONS": {"CLIENT_CLASS": "django_redis.client.DefaultClient"},
     }
 }

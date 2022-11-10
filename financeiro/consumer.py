@@ -11,17 +11,17 @@ import json
 
 
 conf = {
-        'bootstrap.servers': 'pkc-ldjyd.southamerica-east1.gcp.confluent.cloud:9092',
-        'security.protocol': 'SASL_SSL',
-        'sasl.username': 'MABSYUGWW23PZAFB',
-        'sasl.password': 'ZgFhk8CANir6A17SoxYlv2Pz4ReQAROtrr1yIYVBHIcFGWG+xyP5+xDWxFFqz2lA',
-        'sasl.mechanism': 'PLAIN',
-        'group.id': 'myGroup',
+        'bootstrap.servers': os.getenv('BOOTSTRAP_SERVERS'),
+        'security.protocol': os.getenv('SECURITY_PROTOCOL'),
+        'sasl.username': os.getenv('SASL_USERNAME'),
+        'sasl.password': os.getenv('SASL_PASSWORD'),
+        'sasl.mechanism': os.getenv('SASL_MECHANISM'),
+        'group.id': os.getenv('GROUP_ID'),
         'auto.offset.reset': 'earliest'
     }
 consumer = Consumer(conf)
 
-consumer.subscribe(['financeiro_topic'])
+consumer.subscribe([os.getenv('KAFKA_TOPIC')])
 
 while True:
     msg = consumer.poll(1.0)

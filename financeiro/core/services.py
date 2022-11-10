@@ -1,7 +1,7 @@
-import requests
+import requests, os
 
 class UserService:
-    endpoint = 'http://users-ms:8000/api/'
+    endpoint = os.getenv('USERS_MS') + '/api/'
 
     @staticmethod
     def get(path, **kwargs):

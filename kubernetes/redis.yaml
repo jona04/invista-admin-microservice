@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: financeiro-redis
+  name: financeiro-redis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: financeiro-redis
+  template:
+    metadata:
+      labels:
+        io.kompose.service: financeiro-redis
+    spec:
+      containers:
+        - image: redis
+          name: financeiro-redis
+          ports:
+            - containerPort: 6379
+          resources: 
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: financeiro-redis
+  name: financeiro-redis
+spec:
+  ports:
+    - name: "6379"
+      port: 6379
+      targetPort: 6379
+  selector:
+    io.kompose.service: financeiro-redis

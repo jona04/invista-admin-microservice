@@ -8,10 +8,17 @@ spec:
   rules:
     - http:
         paths:
-          - path: /api/users
+          - path: /api/admin/*
             pathType: ImplementationSpecific
             backend:
               service:
-                name: users-backend
+                name: admin-backend
                 port:
-                  number: 8001
+                  number: 8002
+          - path: /api/financeiro/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: financeiro-backend
+                port:
+                  number: 8003

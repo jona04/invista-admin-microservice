@@ -1,5 +1,5 @@
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
+# from django.utils.decorators import method_decorator
+# from django.views.decorators.cache import cache_page
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, mixins
@@ -24,9 +24,9 @@ class RegisterApiView(APIView):
         data = request.data
         data['is_financeiro'] = False
         
-        response = requests.post('http://172.17.0.1:8001/api/register', data)
+        response = UserService.post('register', data=data)
 
-        return Response(response.json())
+        return Response(response)
 
 
 class LoginApiView(APIView):
@@ -146,7 +146,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
     queryset = Servico.objects.all()
     serializer_class = ServicoSerializer
 
-    @method_decorator(cache_page(60*60*2, key_prefix='servicos_frontend'))
+    # @method_decorator(cache_page(60*60*2, key_prefix='servicos_frontend'))
     def get(self, request, pk=None):
         if pk:
             return self.retrieve(request, pk)
@@ -161,10 +161,10 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         response = self.create(request, chapa=chapa, cliente=cliente)
         producer.produce("financeiro_topic", key="servico_created", value=json.dumps(response.data))
         
-        for key in cache.keys('*'):
-            if 'servicos_frontend' in key or 'servicos_list_admin' in key:
-                cache.delete(key)
-        cache.delete('servicos_backend')
+        # for key in cache.keys('*'):
+        #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
+        #         cache.delete(key)
+        # cache.delete('servicos_backend')
         return response
 
 

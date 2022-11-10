@@ -1,0 +1,169 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: admin-backend
+  name: admin-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: admin-backend
+  template:
+    metadata:
+      labels:
+        io.kompose.service: admin-backend
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - python manage.py runserver 0.0.0.0:8000
+          env:
+            - name: BOOTSTRAP_SERVERS
+              valueFrom: 
+                  secretKeyRef:
+                    name: kafka-secrets
+                    key: BOOTSTRAP_SERVERS
+            - name: DB_DATABASE
+              value: admin
+            - name: DB_HOST
+              value: 34.95.249.114
+            - name: DB_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_PASSWORD
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_USERNAME
+            - name: GROUP_ID
+              value: myGroup
+            - name: KAFKA_TOPIC
+              value: admin_topic
+            - name: SASL_MECHANISM
+              value: PLAIN
+            - name: SASL_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_PASSWORD
+            - name: SASL_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_USERNAME
+            - name: SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: USERS_MS
+              value: http://users-ms:8000
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+          image: invista/admin:0.0.2
+          name: admin_backend
+          ports:
+            - containerPort: 8000
+          resources: 
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ../admin/docker-compose.prod.yml
+    kompose.version: 1.26.1 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: admin-queue
+  name: admin-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: admin-queue
+  template:
+    metadata:
+      labels:
+        io.kompose.service: admin-queue
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - python consumer.py
+          env:
+          - name: BOOTSTRAP_SERVERS
+              valueFrom: 
+                  secretKeyRef:
+                    name: kafka-secrets
+                    key: BOOTSTRAP_SERVERS
+            - name: DB_DATABASE
+              value: admin
+            - name: DB_HOST
+              value: 34.95.249.114
+            - name: DB_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_PASSWORD
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_USERNAME
+            - name: GROUP_ID
+              value: myGroup
+            - name: KAFKA_TOPIC
+              value: admin_topic
+            - name: SASL_MECHANISM
+              value: PLAIN
+            - name: SASL_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_PASSWORD
+            - name: SASL_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_USERNAME
+            - name: SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: USERS_MS
+              value: http://users-ms:8000
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+          image: invista/admin:0.0.2
+          name: admin_queue
+          resources: 
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: admin-backend
+  name: admin_backend
+spec:
+  ports:
+    - name: "8002"
+      port: 8002
+      targetPort: 8000
+  selector:
+    io.kompose.service: admin-backend

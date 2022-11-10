@@ -13,9 +13,8 @@ from .serializers import UserSerializer
 class RegisterApiView(APIView):
     def post(self, request):
         data = request.data
-
         if data['password'] != data['password_confirm']:
-            raise exceptions .APIException('Senha nao iguais')
+            raise exceptions.APIException('Senha nao iguais')
 
         serializer = UserSerializer(data=data)
         serializer.is_valid(raise_exception=True)

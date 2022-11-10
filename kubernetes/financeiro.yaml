@@ -1,0 +1,166 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: financeiro-backend
+  name: financeiro-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: financeiro-backend
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: financeiro-backend
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - python manage.py runserver 0.0.0.0:8000
+          env:
+            - name: BOOTSTRAP_SERVERS
+              valueFrom: 
+                  secretKeyRef:
+                    name: kafka-secrets
+                    key: BOOTSTRAP_SERVERS
+            - name: DB_DATABASE
+              value: financeiro
+            - name: DB_HOST
+              value: 34.151.227.241
+            - name: DB_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_PASSWORD
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_USERNAME
+            - name: GROUP_ID
+              value: myGroup
+            - name: KAFKA_TOPIC
+              value: financeiro_topic
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+            - name: SASL_MECHANISM
+              value: PLAIN
+            - name: SASL_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_PASSWORD
+            - name: SASL_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_USERNAME
+            - name: SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: USERS_MS
+              value: http://users-ms:8000
+          image: invista/financeiro:0.0.1
+          name: financeiro_backend
+          ports:
+            - containerPort: 8000
+          resources: 
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+      restartPolicy: Always
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    io.kompose.service: financeiro-queue
+  name: financeiro-queue
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: financeiro-queue
+  template:
+    metadata:
+      labels:
+        io.kompose.service: financeiro-queue
+    spec:
+      containers:
+        - args:
+            - sh
+            - -c
+            - python consumer.py
+          env:
+            - name: BOOTSTRAP_SERVERS
+              valueFrom: 
+                  secretKeyRef:
+                    name: kafka-secrets
+                    key: BOOTSTRAP_SERVERS
+            - name: DB_DATABASE
+              value: financeiro
+            - name: DB_HOST
+              value: 34.151.227.241
+            - name: DB_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_PASSWORD
+            - name: DB_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              valueFrom: 
+                secretKeyRef:
+                  name: database-secrets
+                  key: DB_USERNAME
+            - name: GROUP_ID
+              value: myGroup
+            - name: KAFKA_TOPIC
+              value: financeiro_topic
+            - name: REDIS_URL
+              value: redis://redis:6379/0
+            - name: SASL_MECHANISM
+              value: PLAIN
+            - name: SASL_PASSWORD
+              valueFrom: 
+                secretKeyRef:
+                  name: kafka-secrets
+                  key: SASL_PASSWORD
+            - name: SASL_USERNAME
+              value: MABSYUGWW23PZAFB
+            - name: SECURITY_PROTOCOL
+              value: SASL_SSL
+            - name: USERS_MS
+              value: http://users-ms:8000
+          image: invista/financeiro:0.0.1
+          name: financeiro-queue
+          resources: 
+            requests:
+              cpu: "100m"
+              memory: "128Mi"
+            limits:
+              cpu: "100m"
+              memory: "128Mi"
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    io.kompose.service: financeiro-backend
+  name: financeiro-backend
+spec:
+  ports:
+    - name: "8003"
+      port: 8003
+      targetPort: 8000
+  selector:
+    io.kompose.service: financeiro-backend

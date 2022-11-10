@@ -94,14 +94,6 @@ DATABASES = {
         "PASSWORD": os.getenv('DB_PASSWORD'),
         "HOST": os.getenv('DB_HOST'),  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
         "PORT": os.getenv('DB_PORT'),  # Set to empty string for default.
-    },
-    "old": {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",  # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        "NAME": "invista",  # Or path to database file if using sqlite3.
-        "USER": "postgres",
-        "PASSWORD": "",
-        "HOST": "host.docker.internal",  # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        "PORT": 5432,  # Set to empty string for default.
     }
 }
 

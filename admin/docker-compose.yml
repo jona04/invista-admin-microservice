@@ -9,9 +9,25 @@ services:
       - .:/app
     ports:
       - 8002:8000
-    depends_on:
-      - admin_db
-      - admin_redis
+    environment:
+      environment:
+      BOOTSTRAP_SERVERS: pkc-ldjyd.southamerica-east1.gcp.confluent.cloud:9092
+      SECURITY_PROTOCOL: SASL_SSL
+      SASL_USERNAME: MABSYUGWW23PZAFB
+      SASL_PASSWORD: ZgFhk8CANir6A17SoxYlv2Pz4ReQAROtrr1yIYVBHIcFGWG+xyP5+xDWxFFqz2lA
+      SASL_MECHANISM: PLAIN
+      GROUP_ID: myGroup
+      KAFKA_TOPIC: admin_topic
+      DB_HOST: 34.95.249.114
+      DB_PORT: 5432
+      DB_DATABASE: admin
+      DB_USERNAME: postgres
+      DB_PASSWORD: nfjy1994
+      USERS_MS: http://users-ms:8000
+      REDIS_URL: redis://redis:6379/0
+    # depends_on:
+      # - admin_db
+      # - admin_redis
     networks:
       - admin
       - users
@@ -19,31 +35,31 @@ services:
   admin_queue:
     build: .
     command: "python consumer.py"
-    depends_on:
-      - admin_db
+    # depends_on:
+    #   - admin_db
     networks:
       - admin
 
-  admin_db:
-    image: postgres
-    restart: always
-    environment:
-      POSTGRES_DB: admin
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: a
-    volumes:
-      - .dbdata:/var/lib/postgres
-    ports:
-      - 5436:5432
-    networks:
-      - admin
+  # admin_db:
+  #   image: postgres
+  #   restart: always
+  #   environment:
+  #     POSTGRES_DB: admin
+  #     POSTGRES_USER: postgres
+  #     POSTGRES_PASSWORD: a
+  #   volumes:
+  #     - .dbdata:/var/lib/postgres
+  #   ports:
+  #     - 5436:5432
+  #   networks:
+  #     - admin
 
-  admin_redis:
-    image: redis
-    ports: 
-      - 6379:6379
-    networks:
-      - admin
+  # admin_redis:
+  #   image: redis
+  #   ports: 
+  #     - 6379:6379
+  #   networks:
+  #     - admin
 
 networks:
   admin:

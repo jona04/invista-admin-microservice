@@ -1,9 +1,8 @@
 version: '3'
 services:
-  admin_backend:
+  financeiro_backend:
     build: . 
-    image: invista/admin:0.0.8
-    command: "python manage.py runserver 0.0.0.0:8000"
+    image: invista/financeiro:0.0.4
     environment:
       BOOTSTRAP_SERVERS: pkc-ldjyd.southamerica-east1.gcp.confluent.cloud:9092
       SECURITY_PROTOCOL: SASL_SSL
@@ -11,20 +10,23 @@ services:
       SASL_PASSWORD: ZgFhk8CANir6A17SoxYlv2Pz4ReQAROtrr1yIYVBHIcFGWG+xyP5+xDWxFFqz2lA
       SASL_MECHANISM: PLAIN
       GROUP_ID: myGroup
-      KAFKA_TOPIC: admin_topic
-      DB_HOST: 34.95.249.114
+      KAFKA_TOPIC: financeiro_topic
+      DB_HOST: 34.151.227.241
       DB_PORT: 5432
-      DB_DATABASE: admin
+      DB_DATABASE: financeiro
       DB_USERNAME: postgres
       DB_PASSWORD: nfjy1994
       USERS_MS: http://users-ms:8000
+      REDIS_URL: redis://financeiro_redis:6379/0
+    command: "python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
     ports:
-      - 8002:8000
+      - 8003:8000
 
-  admin_queue:
+  financeiro_queue:
     build: .
-    image: invista/admin:0.0.8
-    command: "python consumer.py"
+    image: invista/financeiro:0.0.4
     environment:
       BOOTSTRAP_SERVERS: pkc-ldjyd.southamerica-east1.gcp.confluent.cloud:9092
       SECURITY_PROTOCOL: SASL_SSL
@@ -32,11 +34,17 @@ services:
       SASL_PASSWORD: ZgFhk8CANir6A17SoxYlv2Pz4ReQAROtrr1yIYVBHIcFGWG+xyP5+xDWxFFqz2lA
       SASL_MECHANISM: PLAIN
       GROUP_ID: myGroup
-      KAFKA_TOPIC: admin_topic
-      DB_HOST: 34.95.249.114
+      KAFKA_TOPIC: financeiro_topic
+      DB_HOST: 34.151.227.241
       DB_PORT: 5432
-      DB_DATABASE: admin
+      DB_DATABASE: financeiro
       DB_USERNAME: postgres
       DB_PASSWORD: nfjy1994
       USERS_MS: http://users-ms:8000
       REDIS_URL: redis://redis:6379/0
+    command: "python consumer.py"
+
+  redis:
+    image: redis
+    ports: 
+      - 6379:6379
