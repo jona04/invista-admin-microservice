@@ -2,7 +2,7 @@ from django.urls import include, path
 
 from .views import (ServicoBackendAPIView, ServicoFrontendAPIView, LoginApiView, 
     LogoutAPIView, RegisterApiView, UserAPIView, ServicoFastGenericAPIView,
-    NotaFastGenericAPIView, NotaBackendAPIView)
+    NotaFastGenericAPIView, NotaBackendAPIView, ChapaBackendAPIView)
 
 
 urlpatterns = [
@@ -11,6 +11,7 @@ urlpatterns = [
     path('servicos/frontend', ServicoFrontendAPIView.as_view()),
     path('servicos/backend', ServicoBackendAPIView.as_view()),
     path('notas/backend', NotaBackendAPIView.as_view()),
+    path('chapas/backend', ChapaBackendAPIView.as_view()),
     path("register", RegisterApiView.as_view() ),
     path("login", LoginApiView.as_view() ),
     path("user", UserAPIView.as_view()),

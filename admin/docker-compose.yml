@@ -10,7 +10,6 @@ services:
     ports:
       - 8002:8000
     environment:
-      environment:
       BOOTSTRAP_SERVERS: pkc-ldjyd.southamerica-east1.gcp.confluent.cloud:9092
       SECURITY_PROTOCOL: SASL_SSL
       SASL_USERNAME: MABSYUGWW23PZAFB

@@ -10,7 +10,6 @@ from .services import UserService
 from .serializers import ChapaSerializer, ClienteSerializer, NotaListSerializer, NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, GrupoNotaServicoSerializer
 from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico
 from app.producer import producer
-import requests
 import json
 
 class FinanceiroAPIView(APIView):
@@ -99,7 +98,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Chapa.objects.all()
+    queryset = Chapa.objects.all()[:1000]
     serializer_class = ChapaSerializer
 
     def get(self, request, pk=None):
@@ -127,7 +126,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
 class ServicoListGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin):
-    queryset = Servico.objects.all()
+    queryset = Servico.objects.all()[:1000]
     serializer_class = ServicoListSerializer
 
     def get(self, request, pk=None):
@@ -143,7 +142,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Servico.objects.all()
+    queryset = Servico.objects.all()[:1000]
     serializer_class = ServicoSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='servicos_frontend'))
@@ -220,7 +219,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
 class NotaListGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin):
-    queryset = Nota.objects.all()
+    queryset = Nota.objects.all()[:1000]
     serializer_class = NotaListSerializer
 
     def get(self, request, pk=None):
@@ -232,7 +231,7 @@ class NotaListGenericAPIView(generics.GenericAPIView,
 
 class NotaFullGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin):
-    queryset = Nota.objects.all()
+    queryset = Nota.objects.all()[:1000]
     serializer_class = NotaFullSerializer
 
     def get(self, request, pk=None):
@@ -245,7 +244,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Nota.objects.all()
+    queryset = Nota.objects.all()[:1000]
     serializer_class = NotaSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='notas_frontend'))

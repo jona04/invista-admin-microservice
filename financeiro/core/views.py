@@ -90,25 +90,42 @@ class ServicoBackendAPIView(APIView):
         start = (page - 1) * per_page
         end = page * per_page
 
+        servico_quantity_chart = []
+        servico_value_chart = []
+        count_elements = 0
+        count_value = 0
         data = serializer[start:end]
-        for d in data:
+        aux_date = datetime.strptime(data[0]['created_at'],'%Y-%m-%dT%H:%M:%S.%fZ').date()
+        for i, d in enumerate(data):
             created_at = d['created_at']
             created_at_date = datetime.strptime(created_at,'%Y-%m-%dT%H:%M:%S.%fZ')
             new_date = created_at_date.date()
-            d['new_date'] = new_date
-
-        chart_points = []
-        dcounts = Counter(d['new_date'] for d in data)
-        for d, count in dcounts.items():
-            chart_points.append(
-                { 
-                    'x': d, 
-                    'y': count 
-                }
-            )
+            if aux_date == new_date:
+                count_elements = count_elements + 1
+                count_value = count_value + d['valor_total_servico']
+            if aux_date != new_date or i == len(data)-1:
+                servico_quantity_chart.append(
+                    {
+                        'x': aux_date,
+                        'y': count_elements
+                    }
+                )
+                servico_value_chart.append(
+                    {
+                        'x': aux_date,
+                        'y': count_value
+                    }
+                )
+                count_elements = 1
+                count_value = d['valor_total_servico']
+                aux_date = new_date
+                continue
         
         return Response({
-            'data': chart_points,
+            'data': {
+                'servico_quantity_chart': servico_quantity_chart,
+                'servico_value_chart': servico_value_chart
+            },
             'meta': {
                 'total': total,
                 'page': page,
@@ -151,18 +168,42 @@ class NotaBackendAPIView(APIView):
             new_date = created_at_date.date()
             d['new_date'] = new_date
 
-        chart_points = []
-        dcounts = Counter(d['new_date'] for d in data)
-        for d, count in dcounts.items():
-            chart_points.append(
-                { 
-                    'x': d, 
-                    'y': count 
-                }
-            )
+        nota_quantity_chart = []
+        nota_value_chart = []
+        count_elements = 0
+        count_value = 0
+        data = serializer[start:end]
+        aux_date = datetime.strptime(data[0]['created_at'],'%Y-%m-%dT%H:%M:%S.%fZ').date()
+        for i, d in enumerate(data):
+            created_at = d['created_at']
+            created_at_date = datetime.strptime(created_at,'%Y-%m-%dT%H:%M:%S.%fZ')
+            new_date = created_at_date.date()
+            if aux_date == new_date:
+                count_elements = count_elements + 1
+                count_value = count_value + d['valor_total_nota']
+            if aux_date != new_date or i == len(data)-1:
+                nota_quantity_chart.append(
+                    {
+                        'x': aux_date,
+                        'y': count_elements
+                    }
+                )
+                nota_value_chart.append(
+                    {
+                        'x': aux_date,
+                        'y': count_value
+                    }
+                )
+                count_elements = 1
+                count_value = d['valor_total_nota']
+                aux_date = new_date
+                continue
         
         return Response({
-            'data': chart_points,
+            'data': {
+                'nota_quantity_chart': nota_quantity_chart,
+                'nota_value_chart': nota_value_chart
+            },
             'meta': {
                 'total': total,
                 'page': page,
@@ -182,3 +223,61 @@ class NotaFastGenericAPIView(generics.GenericAPIView,
             return self.retrieve(request, pk)
 
         return self.list(request)
+
+
+class ChapaBackendAPIView(APIView):
+    def get(self, request):
+
+        start_date = datetime.now() - timedelta(30)
+        servicos = Servico.objects.filter(created_at__range=(start_date.date(), date.today()))
+        serializer = ServicoFastSerializer(servicos, many=True).data
+
+        total = len(serializer)
+
+        per_page = total
+        page = int(request.query_params.get('page', 1))
+        start = (page - 1) * per_page
+        end = page * per_page
+
+        chapa_quantity_chart = []
+        chapa_value_chart = []
+        count_elements = 0
+        count_value = 0
+        data = serializer[start:end]
+        aux_date = datetime.strptime(data[0]['created_at'],'%Y-%m-%dT%H:%M:%S.%fZ').date()
+        for i, d in enumerate(data):
+            created_at = d['created_at']
+            created_at_date = datetime.strptime(created_at,'%Y-%m-%dT%H:%M:%S.%fZ')
+            new_date = created_at_date.date()
+            if aux_date == new_date:
+                count_elements = count_elements + d['quantidade']
+                count_value = count_value + d['valor_total_servico']
+            if aux_date != new_date or i == len(data)-1:
+                chapa_quantity_chart.append(
+                    {
+                        'x': aux_date,
+                        'y': count_elements
+                    }
+                )
+                chapa_value_chart.append(
+                    {
+                        'x': aux_date,
+                        'y': count_value
+                    }
+                )
+                count_elements = 1
+                count_value = d['valor_total_servico']
+                aux_date = new_date
+                continue
+        
+        return Response({
+            'data': {
+                'chapa_quantity_chart': chapa_quantity_chart,
+                'chapa_value_chart': chapa_value_chart
+            },
+            'meta': {
+                'total': total,
+                'page': page,
+                'last_page': math.ceil(total / per_page)
+            }
+        })
