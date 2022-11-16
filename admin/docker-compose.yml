@@ -17,9 +17,9 @@ services:
       SASL_MECHANISM: PLAIN
       GROUP_ID: myGroup
       KAFKA_TOPIC: admin_topic
-      DB_HOST: 34.95.249.114
+      DB_HOST: invista-admin-db.cr6ld9unj4h4.us-east-1.rds.amazonaws.com
       DB_PORT: 5432
-      DB_DATABASE: admin
+      DB_DATABASE: invista_admin
       DB_USERNAME: postgres
       DB_PASSWORD: nfjy1994
       USERS_MS: http://users-ms:8000

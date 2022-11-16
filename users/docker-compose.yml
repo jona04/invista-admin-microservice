@@ -6,9 +6,9 @@ services:
     volumes:
       - .:/app
     environment:
-      DB_HOST: 34.95.212.65
+      DB_HOST: invista-users-db.cr6ld9unj4h4.us-east-1.rds.amazonaws.com
       DB_PORT: 5432
-      DB_DATABASE: users
+      DB_DATABASE: invista_users
       DB_USERNAME: postgres
       DB_PASSWORD: nfjy1994
     ports:
