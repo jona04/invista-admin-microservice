@@ -3,7 +3,8 @@ from django.urls import include, path
 from .views import (
     ChapaGenericAPIView, ClienteGenericAPIView, NotaGenericAPIView, ServicoGenericAPIView, 
     ServicoListGenericAPIView, NotaListGenericAPIView, NotaFullGenericAPIView,
-    LoginApiView, LogoutAPIView, RegisterApiView, UserAPIView
+    LoginApiView, LogoutAPIView, RegisterApiView, UserAPIView, EntradaChapaGenericAPIView,
+    SaidaChapaGenericAPIView, CategoriaEntradaGenericAPIView
 )
 
 
@@ -11,6 +12,11 @@ urlpatterns = [
     # path('financeiros', FinanceiroAPIView.as_view()),
     path('chapas', ChapaGenericAPIView.as_view()),
     path('chapas/<str:pk>', ChapaGenericAPIView.as_view()),
+    path('chapas-entrada', EntradaChapaGenericAPIView.as_view()),
+    path('chapas-entrada/<str:pk>', EntradaChapaGenericAPIView.as_view()),
+    path('categoria-entrada', CategoriaEntradaGenericAPIView.as_view()),
+    path('chapas-saida', SaidaChapaGenericAPIView.as_view()),
+    path('chapas-saida/<str:pk>', SaidaChapaGenericAPIView.as_view()),
     path('clientes', ClienteGenericAPIView.as_view()),
     path('clientes/<str:pk>', ClienteGenericAPIView.as_view()),
     path('servicos', ServicoGenericAPIView.as_view()),

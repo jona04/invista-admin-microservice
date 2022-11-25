@@ -1,7 +1,8 @@
 from attr import fields
 from rest_framework import serializers
 # pylint: disable=import-error
-from core.models import Chapa, GrupoNotaServico, Nota, Servico, Cliente
+from core.models import (Chapa, GrupoNotaServico, Nota, Servico, 
+    Cliente, EntradaChapa, SaidaChapa, CategoriaEntrada)
 
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -30,6 +31,23 @@ class ChapaSerializer(serializers.ModelSerializer):
         model = Chapa
         fields = ("id", "nome", "valor", "estoque", "obs", "created_at", "uploaded_at")
 
+
+class EntradaChapaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EntradaChapa
+        fields = ("id", "quantidade", "marca", "valor_unitario", "chapa", "categoria")
+
+
+class SaidaChapaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SaidaChapa
+        fields = ("id", "quantidade", "observacao", "chapa", "categoria")
+
+
+class CategoriaEntradaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoriaEntrada
+        fields = ("id", "descricao")
 
 class ServicoSerializer(serializers.ModelSerializer):
     class Meta:

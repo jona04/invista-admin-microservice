@@ -7,8 +7,10 @@ from django.core.cache import cache
 from rest_framework import exceptions
 
 from .services import UserService
-from .serializers import ChapaSerializer, ClienteSerializer, NotaListSerializer, NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, GrupoNotaServicoSerializer
-from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico
+from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer, 
+    NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, 
+    GrupoNotaServicoSerializer, EntradaChapaSerializer, SaidaChapaSerializer, CategoriaEntradaSerializer)
+from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada
 from app.producer import producer
 import json
 
@@ -115,7 +117,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
     def put(self, request, pk=None):
         response = self.partial_update(request, pk)
         producer.produce("financeiro_topic", key="chapa_updated", value=json.dumps(response.data))
-        return self.partial_update(request, pk)
+        return response
 
     def delete(self, request, pk=None):
         self.destroy(request, pk)
@@ -323,4 +325,94 @@ class NotaGenericAPIView(generics.GenericAPIView,
         
         self.destroy(request, pk)
         producer.produce("financeiro_topic", key="nota_deleted", value=json.dumps(pk))
+        return pk
+
+
+class EntradaChapaGenericAPIView(generics.GenericAPIView, 
+                        mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        mixins.UpdateModelMixin,
+                        mixins.DestroyModelMixin):
+    queryset = EntradaChapa.objects.all()
+    serializer_class = EntradaChapaSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+        
+        return self.list(request)
+
+    def post(self, request):
+        response = self.create(request)
+        # producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
+        return response
+
+    def put(self, request, pk=None):
+        response = self.partial_update(request, pk)
+        # producer.produce("financeiro_topic", key="chapa_updated", value=json.dumps(response.data))
+        return response
+
+    def delete(self, request, pk=None):
+        self.destroy(request, pk)
+        # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
+        return pk
+
+
+class SaidaChapaGenericAPIView(generics.GenericAPIView, 
+                        mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        mixins.UpdateModelMixin,
+                        mixins.DestroyModelMixin):
+    queryset = SaidaChapa.objects.all()
+    serializer_class = SaidaChapaSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+        
+        return self.list(request)
+
+    def post(self, request):
+        response = self.create(request)
+        # producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
+        return response
+
+    def put(self, request, pk=None):
+        response = self.partial_update(request, pk)
+        # producer.produce("financeiro_topic", key="chapa_updated", value=json.dumps(response.data))
+        return response
+
+    def delete(self, request, pk=None):
+        self.destroy(request, pk)
+        # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
+        return pk
+
+
+class CategoriaEntradaGenericAPIView(generics.GenericAPIView, 
+                        mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        mixins.UpdateModelMixin,
+                        mixins.DestroyModelMixin):
+    queryset = CategoriaEntrada.objects.all()
+    serializer_class = CategoriaEntradaSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+        
+        return self.list(request)
+
+    def post(self, request):
+        response = self.create(request)
+        return response
+
+    def put(self, request, pk=None):
+        response = self.partial_update(request, pk)
+        return response
+
+    def delete(self, request, pk=None):
+        self.destroy(request, pk)
         return pk

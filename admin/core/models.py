@@ -153,3 +153,26 @@ class GrupoNotaServico(models.Model):
             cliente = cliente,
             nota = nota
         )
+
+
+class CategoriaEntrada(models.Model):
+    descricao = models.CharField(max_length=100)
+
+
+class EntradaChapa(models.Model):
+    quantidade = models.IntegerField()
+    marca = models.CharField(max_length=100)
+    valor_unitario = models.DecimalField(max_digits=6, decimal_places=2)
+    chapa = models.ForeignKey(Chapa, on_delete=models.PROTECT)
+    categoria = models.ForeignKey(CategoriaEntrada, on_delete=models.PROTECT)
+
+
+class CategoriaSaida(models.Model):
+    descricao = models.CharField(max_length=100)
+
+
+class SaidaChapa(models.Model):
+    quantidade = models.IntegerField()
+    observacao = models.TextField()
+    chapa = models.ForeignKey(Chapa, on_delete=models.PROTECT)
+    categoria = models.ForeignKey(CategoriaEntrada, on_delete=models.PROTECT)
