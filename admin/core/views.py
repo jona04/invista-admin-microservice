@@ -5,12 +5,14 @@ from rest_framework.response import Response
 from rest_framework import generics, mixins
 from django.core.cache import cache
 from rest_framework import exceptions
+from django.db.models import Q
 
 from .services import UserService
 from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer, 
     NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, 
-    GrupoNotaServicoSerializer, EntradaChapaSerializer, SaidaChapaSerializer, CategoriaEntradaSerializer)
-from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada
+    GrupoNotaServicoSerializer, EntradaChapaSerializer, SaidaChapaSerializer, 
+    CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer)
+from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida
 from app.producer import producer
 import json
 
@@ -345,6 +347,7 @@ class EntradaChapaGenericAPIView(generics.GenericAPIView,
 
     def post(self, request):
         response = self.create(request)
+        self.adiciona_entrada_no_estoque(request.data)
         # producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
         return response
 
@@ -354,9 +357,23 @@ class EntradaChapaGenericAPIView(generics.GenericAPIView,
         return response
 
     def delete(self, request, pk=None):
-        self.destroy(request, pk)
+        responde = self.destroy(request, pk)
+        self.remove_entrada_do_estoque(pk)
         # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
-        return pk
+        return responde
+
+    def adiciona_entrada_no_estoque(data):
+        chapa = Chapa.objects.get(pk=data['chapa'])
+        if chapa.estoque is None:
+            chapa.estoque = 0
+        chapa.estoque = chapa.estoque + data['quantidade']
+        chapa.save()
+
+    def remove_entrada_do_estoque(pk):
+        entrada_chapa = EntradaChapa.objects.get(pk=pk) 
+        chapa = Chapa.objects.get(pk=entrada_chapa.chapa.id)
+        chapa.estoque = chapa.estoque - entrada_chapa.quantidade
+        chapa.save()
 
 
 class SaidaChapaGenericAPIView(generics.GenericAPIView, 
@@ -376,6 +393,7 @@ class SaidaChapaGenericAPIView(generics.GenericAPIView,
 
     def post(self, request):
         response = self.create(request)
+        self.adiciona_saida_no_estoque(request.data)
         # producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
         return response
 
@@ -385,9 +403,21 @@ class SaidaChapaGenericAPIView(generics.GenericAPIView,
         return response
 
     def delete(self, request, pk=None):
-        self.destroy(request, pk)
+        response = self.destroy(request, pk)
+        self.remove_saida_do_estoque(pk)
         # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
-        return pk
+        return response
+
+    def adiciona_saida_no_estoque(data):
+        chapa = Chapa.objects.get(pk=data['chapa'])
+        chapa.estoque = chapa.estoque - data['quantidade']
+        chapa.save()
+
+    def remove_saida_do_estoque(pk):
+        saida_chapa = SaidaChapa.objects.get(pk=pk) 
+        chapa = Chapa.objects.get(pk=saida_chapa.chapa.id)
+        chapa.estoque = chapa.estoque + saida_chapa.quantidade
+        chapa.save()
 
 
 class CategoriaEntradaGenericAPIView(generics.GenericAPIView, 
@@ -416,3 +446,39 @@ class CategoriaEntradaGenericAPIView(generics.GenericAPIView,
     def delete(self, request, pk=None):
         self.destroy(request, pk)
         return pk
+
+
+class CategoriaSaidaGenericAPIView(generics.GenericAPIView, 
+                        mixins.RetrieveModelMixin,
+                        mixins.ListModelMixin,
+                        mixins.CreateModelMixin,
+                        mixins.UpdateModelMixin,
+                        mixins.DestroyModelMixin):
+    queryset = CategoriaSaida.objects.all()
+    serializer_class = CategoriaSaidaSerializer
+
+    def get(self, request, pk=None):
+        if pk:
+            return self.retrieve(request, pk)
+        
+        return self.list(request)
+
+    def post(self, request):
+        response = self.create(request)
+        return response
+
+    def put(self, request, pk=None):
+        response = self.partial_update(request, pk)
+        return response
+
+    def delete(self, request, pk=None):
+        self.destroy(request, pk)
+        return pk
+
+
+class EstoqueAPIView(APIView):
+    def get(self, request):
+        chapas = Chapa.objects.filter(estoque__isnull=False)
+        serializer = ChapaEstoqueSerializer(chapas, many=True)
+        
+        return Response(serializer.data)

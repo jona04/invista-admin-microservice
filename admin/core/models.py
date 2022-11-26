@@ -175,4 +175,4 @@ class SaidaChapa(models.Model):
     quantidade = models.IntegerField()
     observacao = models.TextField()
     chapa = models.ForeignKey(Chapa, on_delete=models.PROTECT)
-    categoria = models.ForeignKey(CategoriaEntrada, on_delete=models.PROTECT)
+    categoria = models.ForeignKey(CategoriaSaida, on_delete=models.PROTECT)

@@ -4,7 +4,8 @@ from .views import (
     ChapaGenericAPIView, ClienteGenericAPIView, NotaGenericAPIView, ServicoGenericAPIView, 
     ServicoListGenericAPIView, NotaListGenericAPIView, NotaFullGenericAPIView,
     LoginApiView, LogoutAPIView, RegisterApiView, UserAPIView, EntradaChapaGenericAPIView,
-    SaidaChapaGenericAPIView, CategoriaEntradaGenericAPIView
+    SaidaChapaGenericAPIView, CategoriaEntradaGenericAPIView, CategoriaSaidaGenericAPIView,
+    EstoqueAPIView
 )
 
 
@@ -15,6 +16,7 @@ urlpatterns = [
     path('chapas-entrada', EntradaChapaGenericAPIView.as_view()),
     path('chapas-entrada/<str:pk>', EntradaChapaGenericAPIView.as_view()),
     path('categoria-entrada', CategoriaEntradaGenericAPIView.as_view()),
+    path('categoria-saida', CategoriaSaidaGenericAPIView.as_view()),
     path('chapas-saida', SaidaChapaGenericAPIView.as_view()),
     path('chapas-saida/<str:pk>', SaidaChapaGenericAPIView.as_view()),
     path('clientes', ClienteGenericAPIView.as_view()),
@@ -29,5 +31,6 @@ urlpatterns = [
     path("register", RegisterApiView.as_view() ),
     path("login", LoginApiView.as_view() ),
     path("user", UserAPIView.as_view()),
-    path("logout", LogoutAPIView.as_view())
+    path("logout", LogoutAPIView.as_view()),
+    path("estoque", EstoqueAPIView.as_view())
 ]
