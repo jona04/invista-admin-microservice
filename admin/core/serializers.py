@@ -35,19 +35,19 @@ class ChapaSerializer(serializers.ModelSerializer):
 class ChapaEstoqueSerializer(serializers.ModelSerializer):
     class Meta:
         model = Chapa
-        fields = ("nome", "estoque")
+        fields = ("id","nome", "estoque")
 
 
 class EntradaChapaSerializer(serializers.ModelSerializer):
     class Meta:
         model = EntradaChapa
-        fields = ("id", "quantidade", "marca", "valor_unitario", "chapa", "categoria")
+        fields = ("id", "quantidade", "marca", "valor_unitario", "chapa", "categoria", "data", "created_at", "observacao")
 
 
 class SaidaChapaSerializer(serializers.ModelSerializer):
     class Meta:
         model = SaidaChapa
-        fields = ("id", "quantidade", "observacao", "chapa", "categoria")
+        fields = ("id", "quantidade", "observacao", "chapa", "categoria", "data", "created_at", "observacao")
 
 
 class CategoriaEntradaSerializer(serializers.ModelSerializer):

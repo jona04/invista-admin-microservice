@@ -31,13 +31,13 @@ services:
       - admin
       - users
 
-  admin_queue:
-    build: .
-    command: "python consumer.py"
-    # depends_on:
-    #   - admin_db
-    networks:
-      - admin
+  # admin_queue:
+  #   build: .
+  #   command: "python consumer.py"
+  #   # depends_on:
+  #   #   - admin_db
+  #   networks:
+  #     - admin
 
   # admin_db:
   #   image: postgres

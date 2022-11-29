@@ -3,9 +3,10 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import generics, mixins
-from django.core.cache import cache
+# from django.core.cache import cache
 from rest_framework import exceptions
 from django.db.models import Q
+from collections import defaultdict
 
 from .services import UserService
 from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer, 
@@ -102,7 +103,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Chapa.objects.all()[:1000]
+    queryset = Chapa.objects.filter().order_by("id")[:1000]
     serializer_class = ChapaSerializer
 
     def get(self, request, pk=None):
@@ -130,7 +131,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
 class ServicoListGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin):
-    queryset = Servico.objects.all()[:1000]
+    queryset = Servico.objects.filter().order_by("-id")[:1000]
     serializer_class = ServicoListSerializer
 
     def get(self, request, pk=None):
@@ -146,7 +147,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Servico.objects.all()[:1000]
+    queryset = Servico.objects.filter().order_by("-id")[:1000]
     serializer_class = ServicoSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='servicos_frontend'))
@@ -182,10 +183,10 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         response = self.partial_update(request, pk)
         producer.produce("financeiro_topic", key="servico_updated", value=json.dumps(response.data))
             
-        for key in cache.keys('*'):
-            if 'servicos_frontend' in key or 'servicos_list_admin' in key:
-                cache.delete(key)
-        cache.delete('servicos_backend')
+        # for key in cache.keys('*'):
+        #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
+        #         cache.delete(key)
+        # cache.delete('servicos_backend')
 
         return response
 
@@ -193,10 +194,10 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         response = self.destroy(request, pk)
         producer.produce("financeiro_topic", key="servico_deleted", value=json.dumps(pk))
         
-        for key in cache.keys('*'):
-            if 'servicos_frontend' in key or 'servicos_list_admin' in key:
-                cache.delete(key)
-        cache.delete('servicos_backend')
+        # for key in cache.keys('*'):
+        #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
+        #         cache.delete(key)
+        # cache.delete('servicos_backend')
         return response
 
     def update_total_service_after_put_service(self, request):
@@ -223,7 +224,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
 class NotaListGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin):
-    queryset = Nota.objects.all()[:1000]
+    queryset = Nota.objects.filter().order_by("-id")[:1000]
     serializer_class = NotaListSerializer
 
     def get(self, request, pk=None):
@@ -235,7 +236,7 @@ class NotaListGenericAPIView(generics.GenericAPIView,
 
 class NotaFullGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin):
-    queryset = Nota.objects.all()[:1000]
+    queryset = Nota.objects.all()
     serializer_class = NotaFullSerializer
 
     def get(self, request, pk=None):
@@ -248,7 +249,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Nota.objects.all()[:1000]
+    queryset = Nota.objects.filter().order_by("-id")[:1000]
     serializer_class = NotaSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='notas_frontend'))
@@ -283,9 +284,9 @@ class NotaGenericAPIView(generics.GenericAPIView,
 
         nota = Nota.objects.get(pk=nota.data['id'])
         
-        for key in cache.keys('*'):
-            if 'notas_frontend' in key:
-                cache.delete(key)
+        # for key in cache.keys('*'):
+        #     if 'notas_frontend' in key:
+        #         cache.delete(key)
         
         return Response(NotaSerializer(nota).data)
 
@@ -312,18 +313,18 @@ class NotaGenericAPIView(generics.GenericAPIView,
             grupo_nota_servico = GrupoNotaServico.objects.create(nota=nota_instance, servico=servico)
             producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
 
-        for key in cache.keys('*'):
-            if 'notas_frontend' in key:
-                cache.delete(key)
+        # for key in cache.keys('*'):
+        #     if 'notas_frontend' in key:
+        #         cache.delete(key)
         
         response = self.partial_update(request, pk)
         producer.produce("financeiro_topic", key="nota_updated", value=json.dumps(response.data))
         return response
 
     def delete(self, request, pk=None):
-        for key in cache.keys('*'):
-            if 'notas_frontend' in key:
-                cache.delete(key)
+        # for key in cache.keys('*'):
+        #     if 'notas_frontend' in key:
+        #         cache.delete(key)
         
         self.destroy(request, pk)
         producer.produce("financeiro_topic", key="nota_deleted", value=json.dumps(pk))
@@ -336,7 +337,7 @@ class EntradaChapaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = EntradaChapa.objects.all()
+    queryset = EntradaChapa.objects.all().order_by("-created_at")
     serializer_class = EntradaChapaSerializer
 
     def get(self, request, pk=None):
@@ -362,14 +363,14 @@ class EntradaChapaGenericAPIView(generics.GenericAPIView,
         # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
         return responde
 
-    def adiciona_entrada_no_estoque(data):
+    def adiciona_entrada_no_estoque(self, data):
         chapa = Chapa.objects.get(pk=data['chapa'])
         if chapa.estoque is None:
             chapa.estoque = 0
         chapa.estoque = chapa.estoque + data['quantidade']
         chapa.save()
 
-    def remove_entrada_do_estoque(pk):
+    def remove_entrada_do_estoque(self, pk):
         entrada_chapa = EntradaChapa.objects.get(pk=pk) 
         chapa = Chapa.objects.get(pk=entrada_chapa.chapa.id)
         chapa.estoque = chapa.estoque - entrada_chapa.quantidade
@@ -382,7 +383,7 @@ class SaidaChapaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = SaidaChapa.objects.all()
+    queryset = SaidaChapa.objects.all().order_by("-created_at")
     serializer_class = SaidaChapaSerializer
 
     def get(self, request, pk=None):
@@ -408,12 +409,12 @@ class SaidaChapaGenericAPIView(generics.GenericAPIView,
         # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
         return response
 
-    def adiciona_saida_no_estoque(data):
+    def adiciona_saida_no_estoque(self, data):
         chapa = Chapa.objects.get(pk=data['chapa'])
         chapa.estoque = chapa.estoque - data['quantidade']
         chapa.save()
 
-    def remove_saida_do_estoque(pk):
+    def remove_saida_do_estoque(self, pk):
         saida_chapa = SaidaChapa.objects.get(pk=pk) 
         chapa = Chapa.objects.get(pk=saida_chapa.chapa.id)
         chapa.estoque = chapa.estoque + saida_chapa.quantidade
@@ -477,8 +478,56 @@ class CategoriaSaidaGenericAPIView(generics.GenericAPIView,
 
 
 class EstoqueAPIView(APIView):
+    def map_reduce(self, iterable, keyfunc, valuefunc=None, reducefunc=None):
+        valuefunc = (lambda x: x) if (valuefunc is None) else valuefunc
+
+        ret = defaultdict(list)
+        for item in iterable:
+            key = keyfunc(item)
+            value = valuefunc(item)
+            ret[key].append(value)
+
+        if reducefunc is not None:
+            for key, value_list in ret.items():
+                ret[key] = reducefunc(value_list)
+
+        ret.default_factory = None
+        return ret
+
     def get(self, request):
+        start = request.query_params.get('start', None)
+        end = request.query_params.get('end', None)
         chapas = Chapa.objects.filter(estoque__isnull=False)
-        serializer = ChapaEstoqueSerializer(chapas, many=True)
+        entradas = EntradaChapa.objects.filter(data__range=[start, end])
+        saidas = SaidaChapa.objects.filter(data__range=[start, end])
+
+        serializer_entradas = EntradaChapaSerializer(entradas, many=True)
+        serializer_saidas = SaidaChapaSerializer(saidas, many=True)
+        serializer_chapas = ChapaEstoqueSerializer(chapas, many=True)
         
-        return Response(serializer.data)
+        kfunc_ent = lambda d: d['chapa']
+        vfunc_ent = lambda d: int(d['quantidade'])
+        rfunc_ent = lambda lst_: sum(lst_) 
+        entradas_map = self.map_reduce(serializer_entradas.data, keyfunc=kfunc_ent, valuefunc=vfunc_ent, reducefunc=rfunc_ent)
+        
+        kfunc = lambda d: d['chapa']
+        vfunc = lambda d: int(d['quantidade'])
+        rfunc = lambda lst_: sum(lst_) 
+        saidas_map = self.map_reduce(serializer_saidas.data, keyfunc=kfunc, valuefunc=vfunc, reducefunc=rfunc)
+        
+        for item in serializer_chapas.data:
+            if item['id'] in saidas_map.keys():
+                qtd = saidas_map.pop(item['id'])
+                item['saidas'] = qtd
+            else:
+                item['saidas'] = 0
+            
+            if item['id'] in entradas_map.keys():
+                qtd = entradas_map.pop(item['id'])
+                item['entradas'] = qtd
+            else:
+                item['entradas'] = 0
+        
+        return Response(serializer_chapas.data)
+    
+    
