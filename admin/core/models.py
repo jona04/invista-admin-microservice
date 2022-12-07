@@ -40,7 +40,7 @@ class Cliente(models.Model):
 
 class Chapa(models.Model):
     nome = models.CharField("Nome", max_length=100)
-    valor = models.FloatField("Valor", blank=True)
+    valor = models.FloatField("Valor", blank=True, default=0.0)
     estoque = models.IntegerField(
         "Quantidade em Estoque", blank=True, default=None, null=True
     )

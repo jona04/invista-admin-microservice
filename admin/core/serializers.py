@@ -136,6 +136,18 @@ class NotaListSerializer(serializers.ModelSerializer):
         )
 
 
+class NotaRelatorioSerializer(serializers.ModelSerializer):
+    servico = ServicoFullSerializer(many=True)
+    class Meta:
+        model = Nota
+        fields = (
+            "id",
+            "servico",
+            "valor_total_nota",
+            "created_at"
+        )
+
+
 class NotaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Nota

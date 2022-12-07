@@ -5,17 +5,17 @@ from rest_framework.response import Response
 from rest_framework import generics, mixins
 # from django.core.cache import cache
 from rest_framework import exceptions
-from django.db.models import Q
 from collections import defaultdict
+from django.db.models import Count, Sum
+from django.db.models.functions import TruncDate
 
 from .services import UserService
 from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer, 
     NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, 
-    GrupoNotaServicoSerializer, EntradaChapaSerializer, SaidaChapaSerializer, 
+    EntradaChapaSerializer, SaidaChapaSerializer, NotaRelatorioSerializer, 
     CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer)
 from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida
-from app.producer import producer
-import json
+
 
 class FinanceiroAPIView(APIView):
     def get(self, request):
@@ -71,7 +71,7 @@ class ClienteGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Cliente.objects.all()
+    queryset = Cliente.objects.all().order_by("-id")
     serializer_class = ClienteSerializer
 
     def get(self, request, pk=None):
@@ -82,18 +82,18 @@ class ClienteGenericAPIView(generics.GenericAPIView,
 
     def post(self, request):
         response = self.create(request)
-        producer.produce("financeiro_topic", key="cliente_created", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="cliente_created", value=json.dumps(response.data))
         return response
 
 
     def put(self, request, pk=None):
         response = self.partial_update(request, pk)
-        producer.produce("financeiro_topic", key="cliente_updated", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="cliente_updated", value=json.dumps(response.data))
         return response
 
     def delete(self, request, pk=None):
         self.destroy(request, pk)
-        producer.produce("financeiro_topic", key="cliente_deleted", value=json.dumps(pk))
+        # producer.produce("financeiro_topic", key="cliente_deleted", value=json.dumps(pk))
         return pk
 
 
@@ -103,7 +103,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Chapa.objects.filter().order_by("id")[:1000]
+    queryset = Chapa.objects.filter().order_by("id")
     serializer_class = ChapaSerializer
 
     def get(self, request, pk=None):
@@ -114,31 +114,28 @@ class ChapaGenericAPIView(generics.GenericAPIView,
 
     def post(self, request):
         response = self.create(request)
-        producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
         return response
 
     def put(self, request, pk=None):
         response = self.partial_update(request, pk)
-        producer.produce("financeiro_topic", key="chapa_updated", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="chapa_updated", value=json.dumps(response.data))
         return response
 
     def delete(self, request, pk=None):
         self.destroy(request, pk)
-        producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
+        # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
         return pk
     
 
-class ServicoListGenericAPIView(generics.GenericAPIView, 
-                        mixins.RetrieveModelMixin,
-                        mixins.ListModelMixin):
-    queryset = Servico.objects.filter().order_by("-id")[:1000]
-    serializer_class = ServicoListSerializer
-
+class ServicoListAPIView(APIView):
     def get(self, request, pk=None):
-        if pk:
-            return self.retrieve(request, pk)
+        start = request.query_params.get('start', None)
+        end = request.query_params.get('end', None)
+        servicos = Servico.objects.filter(created_at__range=[start, end]).order_by("-id")
+        serializer = ServicoListSerializer(servicos, many=True)
 
-        return self.list(request)
+        return Response(serializer.data)
 
 
 class ServicoGenericAPIView(generics.GenericAPIView, 
@@ -163,7 +160,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         request.data['valor_total_servico'] = float(request.data['quantidade']) * chapa.valor
         
         response = self.create(request, chapa=chapa, cliente=cliente)
-        producer.produce("financeiro_topic", key="servico_created", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="servico_created", value=json.dumps(response.data))
         
         # for key in cache.keys('*'):
         #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
@@ -181,7 +178,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         self.update_total_nota_after_update_service(request, pk)
 
         response = self.partial_update(request, pk)
-        producer.produce("financeiro_topic", key="servico_updated", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="servico_updated", value=json.dumps(response.data))
             
         # for key in cache.keys('*'):
         #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
@@ -192,7 +189,7 @@ class ServicoGenericAPIView(generics.GenericAPIView,
 
     def delete(self, request, pk=None):
         response = self.destroy(request, pk)
-        producer.produce("financeiro_topic", key="servico_deleted", value=json.dumps(pk))
+        # producer.produce("financeiro_topic", key="servico_deleted", value=json.dumps(pk))
         
         # for key in cache.keys('*'):
         #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
@@ -221,17 +218,54 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         nota.save()
 
 
-class NotaListGenericAPIView(generics.GenericAPIView, 
-                        mixins.RetrieveModelMixin,
-                        mixins.ListModelMixin):
-    queryset = Nota.objects.filter().order_by("-id")[:1000]
-    serializer_class = NotaListSerializer
+class NotaListAPIView(APIView):
+    def get(self, request):
+        start = request.query_params.get('start', None)
+        end = request.query_params.get('end', None)
+        notas = Nota.objects.filter(created_at__range=[start, end]).order_by("-id")
+        serializer = NotaListSerializer(notas, many=True)
 
-    def get(self, request, pk=None):
-        if pk:
-            return self.retrieve(request, pk)
+        return Response(serializer.data)
+
+
+class NotaRelatorioAPIView(APIView):
+    def get(self, request):
+        start = request.query_params.get('start', None)
+        end = request.query_params.get('end', None)
+        notas = Nota.objects.filter(created_at__range=[start, end]).values('servico__chapa__nome', date=TruncDate('created_at')).annotate(quantidade_sum=Sum('servico__quantidade'),created_at_count=Count('date'))
+        serializer = self.serialize_nota_relatorio(notas)
+
+        formated = {}
+        columns = set()
+        for item in serializer:
+            columns.add(item['date'].strftime("%m/%d"))
+            if item['servico_chapa_nome'] not in formated:
+                formated[item['servico_chapa_nome']] = {
+                    item['date'].strftime("%m/%d"): item['quantidade_sum']
+                }
+            else:
+                formated[item['servico_chapa_nome']].update({
+                    item['date'].strftime("%m/%d"): item['quantidade_sum']
+                })
+
+        formated_list = sorted(formated.items())
+        for item in formated_list:
+            item[1]['total'] = sum(item[1].values())
         
-        return self.list(request)
+        data = {'columns':sorted(columns), 'data':formated_list}
+
+        return Response(data)
+
+    def serialize_nota_relatorio(self, data):
+        result = []
+        for item in data:
+            result.append({
+                'servico_chapa_nome': item['servico__chapa__nome'],
+                'date': item['date'],
+                'quantidade_sum': item['quantidade_sum'],
+                'created_at_count': item['created_at_count']
+            })
+        return result
 
 
 class NotaFullGenericAPIView(generics.GenericAPIView, 
@@ -249,7 +283,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Nota.objects.filter().order_by("-id")[:1000]
+    queryset = Nota.objects.all()
     serializer_class = NotaSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='notas_frontend'))
@@ -260,7 +294,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
         return self.list(request)
 
     def post(self, request):
-        servico_id_list = request.data.pop('servico')
+        servico_id_list = request.data['servico']
         servicos_list = []
         valor_total = 0.0
         for servico_id in servico_id_list:
@@ -273,14 +307,13 @@ class NotaGenericAPIView(generics.GenericAPIView,
                 raise exceptions.APIException(f'Servico ja esta cadastrado na nota de numero: {servico_check.nota.id}')
 
         request.data['valor_total_nota'] = valor_total
-
         nota = self.create(request)
-        producer.produce("financeiro_topic", key="nota_created", value=json.dumps(nota.data))
+        # producer.produce("financeiro_topic", key="nota_created", value=json.dumps(nota.data))
         
         nota_instance = Nota.objects.get(pk=nota.data['id'])
         for servico in servicos_list:
             grupo_nota_servico = GrupoNotaServico.objects.create(nota=nota_instance, servico=servico)
-            producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
+            # producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
 
         nota = Nota.objects.get(pk=nota.data['id'])
         
@@ -308,17 +341,17 @@ class NotaGenericAPIView(generics.GenericAPIView,
 
         request.data['valor_total_nota'] = valor_total
 
-        nota_instance = Nota.objects.get(pk=pk)
-        for servico in servicos_list:
-            grupo_nota_servico = GrupoNotaServico.objects.create(nota=nota_instance, servico=servico)
-            producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
+        # nota_instance = Nota.objects.get(pk=pk)
+        # for servico in servicos_list:
+            # grupo_nota_servico = GrupoNotaServico.objects.create(nota=nota_instance, servico=servico)
+            # producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
 
         # for key in cache.keys('*'):
         #     if 'notas_frontend' in key:
         #         cache.delete(key)
         
         response = self.partial_update(request, pk)
-        producer.produce("financeiro_topic", key="nota_updated", value=json.dumps(response.data))
+        # producer.produce("financeiro_topic", key="nota_updated", value=json.dumps(response.data))
         return response
 
     def delete(self, request, pk=None):
@@ -327,7 +360,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
         #         cache.delete(key)
         
         self.destroy(request, pk)
-        producer.produce("financeiro_topic", key="nota_deleted", value=json.dumps(pk))
+        # producer.produce("financeiro_topic", key="nota_deleted", value=json.dumps(pk))
         return pk
 
 

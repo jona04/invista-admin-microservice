@@ -17,7 +17,7 @@ def update_valor_total_nota(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0002_update_valor_total_servico'),
+        ('core', '0016_update_valor_total_servico'),
     ]
 
     operations = [

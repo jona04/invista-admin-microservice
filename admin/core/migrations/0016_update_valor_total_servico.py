@@ -13,7 +13,7 @@ def update_valor_total_servico(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('core', '0001_initial'),
+        ('core', '0015_categoriaentrada_categoriasaida_entradachapa_and_more'),
     ]
 
     operations = [
