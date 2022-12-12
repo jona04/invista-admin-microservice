@@ -7,6 +7,7 @@ def update_valor_total_servico(apps, schema_editor):
     for servico in Servico.objects.all():
         chapa = Chapa.objects.get(pk=servico.chapa.id)
         valor_total = servico.quantidade * chapa.valor
+        print(servico.id,valor_total)
         servico.valor_total_servico = valor_total
         servico.save(update_fields=['valor_total_servico'])
 

@@ -8,9 +8,6 @@ admin/app/__pycache__/*
 *.pyc
 .pyc 
 
-*.yml
-.yml
-
 # C extensions
 *.so
 
