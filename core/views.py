@@ -12,8 +12,9 @@ from django.db.models.functions import TruncDate
 from .services import UserService
 from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer, 
     NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, 
-    EntradaChapaSerializer, SaidaChapaSerializer, NotaRelatorioSerializer, 
-    CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer)
+    EntradaChapaSerializer, SaidaChapaSerializer, 
+    CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer,
+    ServicoCreateNotaSerializer)
 from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida
 
 
@@ -103,7 +104,7 @@ class ChapaGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Chapa.objects.filter().order_by("id")
+    queryset = Chapa.objects.filter().order_by("nome")
     serializer_class = ChapaSerializer
 
     def get(self, request, pk=None):
@@ -138,13 +139,21 @@ class ServicoListAPIView(APIView):
         return Response(serializer.data)
 
 
+class ServicoCreateNotaListAPIView(APIView):
+    def get(self, request, pk=None):
+        servicos = Servico.objects.filter().order_by("-id")[:50]
+        serializer = ServicoCreateNotaSerializer(servicos, many=True)
+
+        return Response(serializer.data)
+
+
 class ServicoGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Servico.objects.filter().order_by("-id")[:1000]
+    queryset = Servico.objects.filter().order_by("-id")
     serializer_class = ServicoSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='servicos_frontend'))
@@ -202,20 +211,22 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         request.data['valor_total_servico'] = float(request.data['quantidade']) * chapa.valor
 
     def update_total_nota_after_update_service(self, request, servico_id):
-        nota_servico_by_servico = GrupoNotaServico.objects.get(servico_id=servico_id)
-        nota = Nota.objects.get(pk=nota_servico_by_servico.nota.id)
-        nota_servico_list_by_nota = GrupoNotaServico.objects.filter(nota_id=nota.id)
-        valor_total = 0.0
-        for nota_servico_by_nota in nota_servico_list_by_nota:
-            if int(nota_servico_by_nota.servico.id) == int(servico_id):
-                chapa = Chapa.objects.get(pk=request.data['chapa'])
-                valor_total = valor_total + (float(request.data['quantidade']) * chapa.valor)
-            else:
-                servico_obj = Servico.objects.get(pk=nota_servico_by_nota.servico.id)
-                valor_total = valor_total + servico_obj.valor_total_servico
-                
-        nota.valor_total_nota = valor_total
-        nota.save()
+        nota_servico_by_servico = GrupoNotaServico.objects.filter(servico_id=servico_id)
+        if nota_servico_by_servico.exists():
+            nota_servico_by_servico = GrupoNotaServico.objects.get(servico_id=servico_id)
+            nota = Nota.objects.get(pk=nota_servico_by_servico.nota.id)
+            nota_servico_list_by_nota = GrupoNotaServico.objects.filter(nota_id=nota.id)
+            valor_total = 0.0
+            for nota_servico_by_nota in nota_servico_list_by_nota:
+                if int(nota_servico_by_nota.servico.id) == int(servico_id):
+                    chapa = Chapa.objects.get(pk=request.data['chapa'])
+                    valor_total = valor_total + (float(request.data['quantidade']) * chapa.valor)
+                else:
+                    servico_obj = Servico.objects.get(pk=nota_servico_by_nota.servico.id)
+                    valor_total = valor_total + servico_obj.valor_total_servico
+                    
+            nota.valor_total_nota = valor_total
+            nota.save()
 
 
 class NotaListAPIView(APIView):
@@ -300,9 +311,12 @@ class NotaGenericAPIView(generics.GenericAPIView,
         for servico_id in servico_id_list:
             servico_check = GrupoNotaServico.objects.filter(servico_id=servico_id).first()
             if servico_check == None:
-                servico_obj = Servico.objects.get(pk=servico_id)
-                valor_total = valor_total + servico_obj.valor_total_servico
-                servicos_list.append(servico_obj)
+                servico = Servico.objects.get(pk=servico_id)
+                chapa = Chapa.objects.get(pk=servico.chapa.id)
+                chapa.estoque = chapa.estoque - servico.quantidade
+                chapa.save(update_fields=['estoque'])
+                valor_total = valor_total + servico.valor_total_servico
+                servicos_list.append(servico)
             else:
                 raise exceptions.APIException(f'Servico ja esta cadastrado na nota de numero: {servico_check.nota.id}')
 

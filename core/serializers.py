@@ -94,6 +94,21 @@ class ServicoFullSerializer(serializers.ModelSerializer):
         )
 
 
+class ServicoCreateNotaSerializer(serializers.ModelSerializer):
+    chapa = serializers.StringRelatedField()
+    class Meta:
+        model = Servico
+        fields = (
+            "id",
+            "nome",
+            "chapa",
+            "quantidade",
+            "valor_total_servico",
+            "created_at",
+            "uploaded_at",
+        )
+
+
 class ServicoListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Servico

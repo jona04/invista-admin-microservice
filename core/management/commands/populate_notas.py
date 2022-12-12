@@ -7,11 +7,13 @@ class Command(BaseCommand):
         notas = Nota.objects.using('old').all().order_by('id')
         
         for nota in notas:
-            Nota.objects.create(
-                id = nota.id,
-                desconto = nota.desconto,
-                created_at = nota.created_at,
-                uploaded_at = nota.uploaded_at,
-                obs = nota.obs
-            )
+            if nota.id > 16437:
+                print(nota.id)
+                Nota.objects.create(
+                    id = nota.id,
+                    desconto = nota.desconto,
+                    created_at = nota.created_at,
+                    uploaded_at = nota.uploaded_at,
+                    obs = nota.obs
+                )
 

@@ -7,13 +7,15 @@ class Command(BaseCommand):
         servicos = Servico.objects.using('old').all()
 
         for servico in servicos:
-            Servico.objects.create(
-                id = servico.id,
-                nome = servico.nome,
-                cliente = servico.cliente,
-                chapa =  servico.chapa,
-                quantidade = servico.quantidade,
-                created_at = servico.created_at,
-                uploaded_at = servico.uploaded_at
-            )
+            if servico.id > 26429:
+                print(servico.id)
+                Servico.objects.create(
+                    id = servico.id,
+                    nome = servico.nome,
+                    cliente = servico.cliente,
+                    chapa =  servico.chapa,
+                    quantidade = servico.quantidade,
+                    created_at = servico.created_at,
+                    uploaded_at = servico.uploaded_at
+                )
 
