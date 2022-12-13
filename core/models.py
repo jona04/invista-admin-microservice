@@ -157,7 +157,7 @@ class GrupoNotaServico(models.Model):
 
 class CategoriaEntrada(models.Model):
     descricao = models.CharField(max_length=100)
-
+  
 
 class EntradaChapa(models.Model):
     quantidade = models.IntegerField()
@@ -168,6 +168,7 @@ class EntradaChapa(models.Model):
     data = models.DateTimeField(null=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     observacao = models.TextField(null=True, blank=True)
+    
 
 class CategoriaSaida(models.Model):
     descricao = models.CharField(max_length=100)

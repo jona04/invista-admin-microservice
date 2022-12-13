@@ -38,18 +38,6 @@ class ChapaEstoqueSerializer(serializers.ModelSerializer):
         fields = ("id","nome", "estoque")
 
 
-class EntradaChapaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = EntradaChapa
-        fields = ("id", "quantidade", "marca", "valor_unitario", "chapa", "categoria", "data", "created_at", "observacao")
-
-
-class SaidaChapaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = SaidaChapa
-        fields = ("id", "quantidade", "observacao", "chapa", "categoria", "data", "created_at", "observacao")
-
-
 class CategoriaEntradaSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoriaEntrada
@@ -60,6 +48,34 @@ class CategoriaSaidaSerializer(serializers.ModelSerializer):
     class Meta:
         model = CategoriaSaida
         fields = ("id", "descricao")
+
+
+class EntradaChapaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = EntradaChapa
+        fields = ("id", "quantidade", "marca", "valor_unitario", "chapa", "categoria", "data", "created_at", "observacao")
+
+
+class SaidaChapaListSerializer(serializers.ModelSerializer):
+    chapa = ChapaSerializer()
+    categoria = CategoriaEntradaSerializer()
+    class Meta:
+        model = EntradaChapa
+        fields = ("id", "quantidade", "observacao", "chapa", "categoria", "data", "created_at", "observacao")
+
+
+class EntradaChapaListSerializer(serializers.ModelSerializer):
+    chapa = ChapaSerializer()
+    categoria = CategoriaEntradaSerializer()
+    class Meta:
+        model = EntradaChapa
+        fields = ("id", "quantidade", "marca", "valor_unitario", "chapa", "categoria", "data", "created_at", "observacao")
+
+
+class SaidaChapaSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SaidaChapa
+        fields = ("id", "quantidade", "observacao", "chapa", "categoria", "data", "created_at", "observacao")
 
 
 class ServicoSerializer(serializers.ModelSerializer):

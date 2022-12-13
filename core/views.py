@@ -12,9 +12,9 @@ from django.db.models.functions import TruncDate
 from .services import UserService
 from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer, 
     NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, 
-    EntradaChapaSerializer, SaidaChapaSerializer, 
+    EntradaChapaSerializer, SaidaChapaSerializer, EntradaChapaListSerializer,
     CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer,
-    ServicoCreateNotaSerializer)
+    ServicoCreateNotaSerializer, SaidaChapaListSerializer)
 from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida
 
 
@@ -169,6 +169,9 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         request.data['valor_total_servico'] = float(request.data['quantidade']) * chapa.valor
         
         response = self.create(request, chapa=chapa, cliente=cliente)
+        
+        self.reduce_chapa_estoque(chapa, float(request.data['quantidade']))
+
         # producer.produce("financeiro_topic", key="servico_created", value=json.dumps(response.data))
         
         # for key in cache.keys('*'):
@@ -181,10 +184,10 @@ class ServicoGenericAPIView(generics.GenericAPIView,
     def put(self, request, pk=None):
 
         # quando servico for atualizado, edita valor total do servico
-        self.update_total_service_after_put_service(request)
+        self.update_total_service_after_put_servico(request)
 
         # quando servico for atualizado, edita valor total da nota
-        self.update_total_nota_after_update_service(request, pk)
+        self.update_total_nota_after_put_servico(request, pk)
 
         response = self.partial_update(request, pk)
         # producer.produce("financeiro_topic", key="servico_updated", value=json.dumps(response.data))
@@ -197,7 +200,13 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         return response
 
     def delete(self, request, pk=None):
+        servico = Servico.objects.get(pk=pk)
         response = self.destroy(request, pk)
+
+        chapa = Chapa.objects.get(pk=servico.chapa.id)
+        self.revert_chapa_estoque(chapa, servico.quantidade)
+
+
         # producer.produce("financeiro_topic", key="servico_deleted", value=json.dumps(pk))
         
         # for key in cache.keys('*'):
@@ -206,11 +215,18 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         # cache.delete('servicos_backend')
         return response
 
-    def update_total_service_after_put_service(self, request):
+    def update_estoque_nota_after_put_servico(self, request, servico_id):
+        servico = Servico.objects.get(pk=servico_id)
+        chapa = Chapa.objects.get(pk=request.data['chapa'])
+        chapa.estoque = chapa.estoque + servico.quantidade
+        chapa.estoque = chapa.estoque - float(request.data['quantidade'])
+        chapa.save(update_fields=['estoque'])
+
+    def update_total_service_after_put_servico(self, request):
         chapa = Chapa.objects.get(pk=request.data['chapa'])
         request.data['valor_total_servico'] = float(request.data['quantidade']) * chapa.valor
 
-    def update_total_nota_after_update_service(self, request, servico_id):
+    def update_total_nota_after_put_servico(self, request, servico_id):
         nota_servico_by_servico = GrupoNotaServico.objects.filter(servico_id=servico_id)
         if nota_servico_by_servico.exists():
             nota_servico_by_servico = GrupoNotaServico.objects.get(servico_id=servico_id)
@@ -227,6 +243,14 @@ class ServicoGenericAPIView(generics.GenericAPIView,
                     
             nota.valor_total_nota = valor_total
             nota.save()
+
+    def reduce_chapa_estoque(self, chapa, quantidade):
+        chapa.estoque = chapa.estoque - quantidade
+        chapa.save(update_fields=['estoque'])
+    
+    def revert_chapa_estoque(self, chapa, quantidade):
+        chapa.estoque = chapa.estoque + quantidade
+        chapa.save(update_fields=['estoque'])
 
 
 class NotaListAPIView(APIView):
@@ -312,9 +336,6 @@ class NotaGenericAPIView(generics.GenericAPIView,
             servico_check = GrupoNotaServico.objects.filter(servico_id=servico_id).first()
             if servico_check == None:
                 servico = Servico.objects.get(pk=servico_id)
-                chapa = Chapa.objects.get(pk=servico.chapa.id)
-                chapa.estoque = chapa.estoque - servico.quantidade
-                chapa.save(update_fields=['estoque'])
                 valor_total = valor_total + servico.valor_total_servico
                 servicos_list.append(servico)
             else:
@@ -378,6 +399,13 @@ class NotaGenericAPIView(generics.GenericAPIView,
         return pk
 
 
+class EntradaChapaListAPIView(APIView):
+    def get(self, request):
+        queryset = EntradaChapa.objects.all().order_by("-id")
+        serializer_class = EntradaChapaListSerializer(queryset, many=True)
+        return Response(serializer_class.data)
+
+
 class EntradaChapaGenericAPIView(generics.GenericAPIView, 
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin,
@@ -394,6 +422,8 @@ class EntradaChapaGenericAPIView(generics.GenericAPIView,
         return self.list(request)
 
     def post(self, request):
+        # request.data['categoria'] = {'id': request.data['categoria'], 'descricao': 'test'}
+        print(request.data)
         response = self.create(request)
         self.adiciona_entrada_no_estoque(request.data)
         # producer.produce("financeiro_topic", key="chapa_created", value=json.dumps(response.data))
@@ -422,6 +452,13 @@ class EntradaChapaGenericAPIView(generics.GenericAPIView,
         chapa = Chapa.objects.get(pk=entrada_chapa.chapa.id)
         chapa.estoque = chapa.estoque - entrada_chapa.quantidade
         chapa.save()
+
+
+class SaidaChapaListAPIView(APIView):
+    def get(self, request):
+        queryset = SaidaChapa.objects.all().order_by("-id")
+        serializer_class = SaidaChapaListSerializer(queryset, many=True)
+        return Response(serializer_class.data)
 
 
 class SaidaChapaGenericAPIView(generics.GenericAPIView, 
