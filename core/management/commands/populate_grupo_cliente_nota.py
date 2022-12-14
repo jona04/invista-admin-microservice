@@ -7,10 +7,9 @@ class Command(BaseCommand):
         nota_clientes = GrupoClienteNota.objects.using('old').all()
 
         for nota_cliente in nota_clientes:
-            if nota_cliente.id > 16381:
+            if nota_cliente.id > 16388:
                 print(nota_cliente.id)
                 GrupoClienteNota.objects.create(
-                    id = nota_cliente.id,
                     nota = nota_cliente.nota,
                     cliente = nota_cliente.cliente
                 )

@@ -7,7 +7,7 @@ class Command(BaseCommand):
         servicos = Servico.objects.all()
 
         for servico in servicos:
-            if servico.id > 26429:
+            if servico.id > 26534:
                 print(servico.id)
                 chapa = Chapa.objects.get(pk=servico.chapa.id)
                 valor_total = servico.quantidade * chapa.valor

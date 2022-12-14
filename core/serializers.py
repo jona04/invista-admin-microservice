@@ -111,7 +111,7 @@ class ServicoFullSerializer(serializers.ModelSerializer):
 
 
 class ServicoCreateNotaSerializer(serializers.ModelSerializer):
-    chapa = serializers.StringRelatedField()
+    chapa = ChapaSerializer()
     class Meta:
         model = Servico
         fields = (

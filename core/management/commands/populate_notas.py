@@ -7,7 +7,7 @@ class Command(BaseCommand):
         notas = Nota.objects.using('old').all().order_by('id')
         
         for nota in notas:
-            if nota.id > 16437:
+            if nota.id > 16499:
                 print(nota.id)
                 Nota.objects.create(
                     id = nota.id,

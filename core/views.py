@@ -189,9 +189,11 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         # quando servico for atualizado, edita valor total da nota
         self.update_total_nota_after_put_servico(request, pk)
 
+        self.update_estoque_nota_after_put_servico(request, pk)
+        
         response = self.partial_update(request, pk)
         # producer.produce("financeiro_topic", key="servico_updated", value=json.dumps(response.data))
-            
+
         # for key in cache.keys('*'):
         #     if 'servicos_frontend' in key or 'servicos_list_admin' in key:
         #         cache.delete(key)
@@ -205,7 +207,6 @@ class ServicoGenericAPIView(generics.GenericAPIView,
 
         chapa = Chapa.objects.get(pk=servico.chapa.id)
         self.revert_chapa_estoque(chapa, servico.quantidade)
-
 
         # producer.produce("financeiro_topic", key="servico_deleted", value=json.dumps(pk))
         
@@ -359,7 +360,10 @@ class NotaGenericAPIView(generics.GenericAPIView,
         return Response(NotaSerializer(nota).data)
 
     def put(self, request, pk=None):
+        nota_instance = Nota.objects.filter(pk=pk).values_list('servico', flat=True)
         servico_id_list = request.data.pop('servico')
+        servico_deleted_from_nota = set(list(nota_instance)) - set(servico_id_list)
+
         servicos_list = []
         valor_total = 0.0
         for servico_id in servico_id_list:
@@ -376,9 +380,8 @@ class NotaGenericAPIView(generics.GenericAPIView,
 
         request.data['valor_total_nota'] = valor_total
 
-        # nota_instance = Nota.objects.get(pk=pk)
-        # for servico in servicos_list:
-            # grupo_nota_servico = GrupoNotaServico.objects.create(nota=nota_instance, servico=servico)
+        for servico in servicos_list:
+            grupo_nota_servico = GrupoNotaServico.objects.create(nota_id=pk, servico=servico)
             # producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
 
         # for key in cache.keys('*'):
@@ -387,6 +390,11 @@ class NotaGenericAPIView(generics.GenericAPIView,
         
         response = self.partial_update(request, pk)
         # producer.produce("financeiro_topic", key="nota_updated", value=json.dumps(response.data))
+        
+        # delete servico in database removed from the nota
+        for servico_deleted in servico_deleted_from_nota:
+            GrupoNotaServico.objects.filter(servico=servico_deleted).delete()
+
         return response
 
     def delete(self, request, pk=None):
