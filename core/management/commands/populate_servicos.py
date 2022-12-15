@@ -7,7 +7,7 @@ class Command(BaseCommand):
         servicos = Servico.objects.using('old').all()
 
         for servico in servicos:
-            if servico.id > 26534:
+            if servico.id > 26571:
                 print(servico.id)
                 Servico.objects.create(
                     id = servico.id,

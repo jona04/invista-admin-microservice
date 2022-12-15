@@ -72,7 +72,7 @@ class ClienteGenericAPIView(generics.GenericAPIView,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Cliente.objects.all().order_by("-id")
+    queryset = Cliente.objects.all().order_by("nome")
     serializer_class = ClienteSerializer
 
     def get(self, request, pk=None):
@@ -621,5 +621,4 @@ class EstoqueAPIView(APIView):
                 item['entradas'] = 0
         
         return Response(serializer_chapas.data)
-    
-    
+  

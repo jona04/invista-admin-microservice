@@ -5,7 +5,7 @@ from core.models import Nota, GrupoNotaServico, Servico
 class Command(BaseCommand):
     def handle(self, *args, **kargs):
         for nota in Nota.objects.all():
-            if nota.id > 16499:
+            if nota.id > 16517:
                 print(nota.id)
                 gropo_nota_servicos = GrupoNotaServico.objects.filter(nota_id=nota.id)
                 valor_total = 0
