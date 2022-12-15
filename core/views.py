@@ -15,7 +15,7 @@ from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer
     EntradaChapaSerializer, SaidaChapaSerializer, EntradaChapaListSerializer,
     CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer,
     ServicoCreateNotaSerializer, SaidaChapaListSerializer)
-from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida
+from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida, GrupoClienteNota
 
 
 class FinanceiroAPIView(APIView):
@@ -124,9 +124,9 @@ class ChapaGenericAPIView(generics.GenericAPIView,
         return response
 
     def delete(self, request, pk=None):
-        self.destroy(request, pk)
+        response = self.destroy(request, pk)
         # producer.produce("financeiro_topic", key="chapa_deleted", value=json.dumps(pk))
-        return pk
+        return response
     
 
 class ServicoListAPIView(APIView):
@@ -368,7 +368,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
         valor_total = 0.0
         for servico_id in servico_id_list:
             nota_check = GrupoNotaServico.objects.filter(servico_id=servico_id).first()
-            if nota_check == None:
+            if nota_check is None:
                 servico_obj = Servico.objects.get(pk=servico_id)
                 valor_total = valor_total + servico_obj.valor_total_servico
                 servicos_list.append(servico_obj)
@@ -402,9 +402,9 @@ class NotaGenericAPIView(generics.GenericAPIView,
         #     if 'notas_frontend' in key:
         #         cache.delete(key)
         
-        self.destroy(request, pk)
+        response = self.destroy(request, pk)
         # producer.produce("financeiro_topic", key="nota_deleted", value=json.dumps(pk))
-        return pk
+        return response
 
 
 class EntradaChapaListAPIView(APIView):

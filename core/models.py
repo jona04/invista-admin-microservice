@@ -130,7 +130,7 @@ class Nota(models.Model):
 
 class GrupoClienteNota(models.Model):
     # pylint: disable=no-member
-    nota = models.ForeignKey(Nota, on_delete=models.PROTECT, null=True)
+    nota = models.ForeignKey(Nota, on_delete=models.CASCADE, null=True)
     cliente = models.ForeignKey(Cliente, on_delete=models.PROTECT, null=True)
 
     def __str__(self):
