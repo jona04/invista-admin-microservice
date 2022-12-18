@@ -14,7 +14,7 @@ from .serializers import (ChapaSerializer, ClienteSerializer, NotaListSerializer
     NotaSerializer, ServicoListSerializer, ServicoSerializer, NotaFullSerializer, 
     EntradaChapaSerializer, SaidaChapaSerializer, EntradaChapaListSerializer,
     CategoriaEntradaSerializer, CategoriaSaidaSerializer, ChapaEstoqueSerializer,
-    ServicoCreateNotaSerializer, SaidaChapaListSerializer)
+    ServicoCreateNotaSerializer, SaidaChapaListSerializer, GrupoNotaClienteSerializer)
 from core.models import Chapa, Cliente, GrupoNotaServico, Nota, Servico, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida, GrupoClienteNota
 
 
@@ -259,9 +259,9 @@ class NotaListAPIView(APIView):
         start = request.query_params.get('start', None)
         end = request.query_params.get('end', None)
         notas = Nota.objects.filter(created_at__range=[start, end]).order_by("-id")
-        serializer = NotaListSerializer(notas, many=True)
-
-        return Response(serializer.data)
+        serializer_notas = NotaListSerializer(notas, many=True)
+        
+        return Response(serializer_notas.data)
 
 
 class NotaRelatorioAPIView(APIView):

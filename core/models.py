@@ -98,6 +98,7 @@ class Nota(models.Model):
     numero = models.IntegerField("Numero Nota", null=True, blank=False, default=0)
     created_at = models.DateTimeField("Criado em", auto_now_add=True, null=True)
     uploaded_at = models.DateTimeField("Atualizado em", auto_now=True, null=True)
+    cliente_nome = models.CharField(max_length=200, null=True, blank=True)
     obs = models.TextField("Observações", null=True, blank=True)
     servico = models.ManyToManyField(Servico, through="GrupoNotaServico", null=True)
     valor_total_nota = models.FloatField("Total", null=True, blank=True, default=0.0)

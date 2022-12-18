@@ -2,7 +2,8 @@ from attr import fields
 from rest_framework import serializers
 # pylint: disable=import-error
 from core.models import (Chapa, GrupoNotaServico, Nota, Servico, 
-    Cliente, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida)
+    Cliente, EntradaChapa, SaidaChapa, CategoriaEntrada, CategoriaSaida,
+    GrupoClienteNota)
 
 
 class ClienteSerializer(serializers.ModelSerializer):
@@ -145,6 +146,7 @@ class NotaFullSerializer(serializers.ModelSerializer):
             "id",
             "desconto",
             "numero",
+            "cliente_nome",
             "obs",
             "servico",
             "status",
@@ -160,6 +162,7 @@ class NotaListSerializer(serializers.ModelSerializer):
             "id",
             "desconto",
             "numero",
+            "cliente_nome",
             "obs",
             "status",
             "valor_total_nota",
@@ -174,6 +177,7 @@ class NotaRelatorioSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "servico",
+            "cliente_nome",
             "valor_total_nota",
             "created_at"
         )
@@ -188,6 +192,7 @@ class NotaSerializer(serializers.ModelSerializer):
             "numero",
             "obs",
             "servico",
+            "cliente_nome",
             "status",
             "valor_total_nota",
             "created_at",
@@ -202,4 +207,13 @@ class GrupoNotaServicoSerializer(serializers.ModelSerializer):
             "id",
             "nota",
             "servico"
+        )
+
+class GrupoNotaClienteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GrupoClienteNota
+        fields = (
+            "id",
+            "nota",
+            "cliente"
         )
