@@ -8,6 +8,7 @@ class Command(BaseCommand):
             # if nota.id > 16517:
             print(nota.id)
             gropo_nota_servicos = GrupoNotaServico.objects.filter(nota_id=nota.id)
-            cliente_nome = gropo_nota_servicos[0].servico.cliente.nome
-            nota.cliente_nome = cliente_nome
-            nota.save(update_fields=['cliente_nome'])
+            if len(gropo_nota_servicos) > 0:
+                cliente_nome = gropo_nota_servicos[0].servico.cliente.nome
+                nota.cliente_nome = cliente_nome
+                nota.save(update_fields=['cliente_nome'])

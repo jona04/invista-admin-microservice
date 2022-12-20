@@ -183,6 +183,10 @@ class ServicoGenericAPIView(generics.GenericAPIView,
 
     def put(self, request, pk=None):
 
+        servico_nota_check = GrupoNotaServico.objects.filter(servico_id=pk)
+        if len(servico_nota_check) > 0:
+            raise exceptions.APIException(f'Serviço não pode ser editado pois já esta em uma nota')
+
         # quando servico for atualizado, edita valor total do servico
         self.update_total_service_after_put_servico(request)
 
@@ -202,6 +206,11 @@ class ServicoGenericAPIView(generics.GenericAPIView,
         return response
 
     def delete(self, request, pk=None):
+        
+        servico_nota_check = GrupoNotaServico.objects.filter(servico_id=pk)
+        if len(servico_nota_check) > 0:
+            raise exceptions.APIException(f'Serviço não pode ser deletado pois já está em uma nota')
+
         servico = Servico.objects.get(pk=pk)
         response = self.destroy(request, pk)
 
@@ -218,10 +227,18 @@ class ServicoGenericAPIView(generics.GenericAPIView,
 
     def update_estoque_nota_after_put_servico(self, request, servico_id):
         servico = Servico.objects.get(pk=servico_id)
-        chapa = Chapa.objects.get(pk=request.data['chapa'])
-        chapa.estoque = chapa.estoque + servico.quantidade
-        chapa.estoque = chapa.estoque - float(request.data['quantidade'])
-        chapa.save(update_fields=['estoque'])
+        if request.data['chapa'] != servico.chapa.id:
+            chapa_new = Chapa.objects.get(pk=request.data['chapa'])
+            chapa_old = Chapa.objects.get(pk=servico.chapa.id)
+            chapa_old.estoque = chapa_old.estoque + servico.quantidade
+            chapa_new.estoque = chapa_new.estoque - float(request.data['quantidade'])
+            chapa_new.save(update_fields=['estoque'])
+            chapa_old.save(update_fields=['estoque'])
+        else:
+            chapa_new = Chapa.objects.get(pk=request.data['chapa'])
+            chapa_new.estoque = chapa_new.estoque + servico.quantidade
+            chapa_new.estoque = chapa_new.estoque - float(request.data['quantidade'])
+            chapa_new.save(update_fields=['estoque'])
 
     def update_total_service_after_put_servico(self, request):
         chapa = Chapa.objects.get(pk=request.data['chapa'])
@@ -331,23 +348,31 @@ class NotaGenericAPIView(generics.GenericAPIView,
 
     def post(self, request):
         servico_id_list = request.data['servico']
-        servicos_list = []
         valor_total = 0.0
-        for servico_id in servico_id_list:
-            servico_check = GrupoNotaServico.objects.filter(servico_id=servico_id).first()
-            if servico_check == None:
-                servico = Servico.objects.get(pk=servico_id)
-                valor_total = valor_total + servico.valor_total_servico
-                servicos_list.append(servico)
-            else:
-                raise exceptions.APIException(f'Servico ja esta cadastrado na nota de numero: {servico_check.nota.id}')
+        servico_clientes = []
+        
+        #checa se ja existe o mesmo servico na nota
+        servico_check = GrupoNotaServico.objects.filter(servico_id__in=servico_id_list)
+        if len(servico_check) > 0:
+            raise exceptions.APIException(f'Serviço já esta cadastrado na nota de numero: {servico_check[0].nota.id}.')
+            
+        #atualiza valor total da nota
+        servicos = Servico.objects.filter(pk__in=servico_id_list)
+        for servico in servicos:
+            servico_clientes.append(servico.cliente.nome)
+            valor_total = valor_total + servico.valor_total_servico
 
+        #verifica se clientes sao diferentes
+        if len(set(servico_clientes)) > 1:
+            raise exceptions.APIException('Serviços possuem clientes diferentes.')
+
+        request.data['cliente_nome'] = servico_clientes[0]
         request.data['valor_total_nota'] = valor_total
         nota = self.create(request)
         # producer.produce("financeiro_topic", key="nota_created", value=json.dumps(nota.data))
         
         nota_instance = Nota.objects.get(pk=nota.data['id'])
-        for servico in servicos_list:
+        for servico in servicos:
             grupo_nota_servico = GrupoNotaServico.objects.create(nota=nota_instance, servico=servico)
             # producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
 
@@ -363,24 +388,29 @@ class NotaGenericAPIView(generics.GenericAPIView,
         nota_instance = Nota.objects.filter(pk=pk).values_list('servico', flat=True)
         servico_id_list = request.data.pop('servico')
         servico_deleted_from_nota = set(list(nota_instance)) - set(servico_id_list)
+        servico_new_added = set(servico_id_list) - set(list(nota_instance))
 
-        servicos_list = []
+        servico_clientes = []
         valor_total = 0.0
-        for servico_id in servico_id_list:
-            nota_check = GrupoNotaServico.objects.filter(servico_id=servico_id).first()
-            if nota_check is None:
-                servico_obj = Servico.objects.get(pk=servico_id)
-                valor_total = valor_total + servico_obj.valor_total_servico
-                servicos_list.append(servico_obj)
-            elif int(nota_check.nota.id) == int(pk):
-                servico_obj = Servico.objects.get(pk=servico_id)
-                valor_total = valor_total + servico_obj.valor_total_servico
-            else:
-                raise exceptions.APIException(f'Servico ja esta cadastrado na nota de numero: {nota_check.nota.id}')
-
+        
+        #checa se ja existe o mesmo servico na nota
+        servico_check = GrupoNotaServico.objects.filter(servico_id__in=servico_new_added)
+        if len(servico_check) > 0:
+            raise exceptions.APIException(f'Servico ja esta cadastrado na nota de numero: {servico_check[0].nota.id}')
+        
+        #atualiza valor total da nota
+        servicos = Servico.objects.filter(pk__in=servico_id_list)
+        for servico in servicos:
+            servico_clientes.append(servico.cliente.nome)
+            valor_total = valor_total + servico.valor_total_servico
         request.data['valor_total_nota'] = valor_total
 
-        for servico in servicos_list:
+        print(set(servico_clientes))
+        #verifica se clientes sao diferentes
+        if len(set(servico_clientes)) > 1:
+            raise exceptions.APIException(f'Serviços possuem clientes diferentes: {set(servico_clientes)}.')
+
+        for servico in Servico.objects.filter(pk__in=servico_new_added):
             grupo_nota_servico = GrupoNotaServico.objects.create(nota_id=pk, servico=servico)
             # producer.produce("financeiro_topic", key="grupo_nota_servico_created", value=json.dumps(GrupoNotaServicoSerializer(grupo_nota_servico).data))
 
@@ -388,6 +418,7 @@ class NotaGenericAPIView(generics.GenericAPIView,
         #     if 'notas_frontend' in key:
         #         cache.delete(key)
         
+        request.data['cliente_nome'] = servico_clientes[0] if len(servico_clientes) > 0 else ''
         response = self.partial_update(request, pk)
         # producer.produce("financeiro_topic", key="nota_updated", value=json.dumps(response.data))
         
