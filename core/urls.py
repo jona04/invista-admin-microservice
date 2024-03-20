@@ -5,7 +5,8 @@ from .views import (
     ServicoListAPIView, NotaListAPIView, NotaFullGenericAPIView, NotaRelatorioAPIView,
     LoginApiView, LogoutAPIView, RegisterApiView, UserAPIView, EntradaChapaGenericAPIView,
     SaidaChapaGenericAPIView, CategoriaEntradaGenericAPIView, CategoriaSaidaGenericAPIView,
-    EstoqueAPIView, ServicoCreateNotaListAPIView, EntradaChapaListAPIView, SaidaChapaListAPIView
+    EstoqueAPIView, ServicoCreateNotaListAPIView, EntradaChapaListAPIView, SaidaChapaListAPIView,
+    ProfileInfoAPIView, ProfilePasswordAPIView, UsersAPIView
 )
 
 
@@ -32,9 +33,15 @@ urlpatterns = [
     path('notas/relatorio', NotaRelatorioAPIView.as_view()),
     path('notas/<str:pk>', NotaGenericAPIView.as_view()),
     path('notas/full/<str:pk>', NotaFullGenericAPIView.as_view()),
+    path("estoque", EstoqueAPIView.as_view()),
+
     path("register", RegisterApiView.as_view() ),
     path("login", LoginApiView.as_view() ),
     path("user", UserAPIView.as_view()),
     path("logout", LogoutAPIView.as_view()),
-    path("estoque", EstoqueAPIView.as_view())
+    path("user/<str:scope>", UserAPIView.as_view()),
+    path("users/info", ProfileInfoAPIView.as_view()),
+    path("users/password", ProfilePasswordAPIView.as_view()),
+    path("users/", UsersAPIView.as_view()),
+    path("users/<str:pk>", UsersAPIView.as_view()),
 ]
