@@ -2,7 +2,7 @@ version: '3.9'
 services:
   admin_backend:
     build: . 
-    image: invista/admin:0.0.16
+    image: invista/admin:0.0.24
     command: "python manage.py runserver 0.0.0.0:8000"
     container_name: admin-ms
     volumes:
@@ -11,9 +11,9 @@ services:
       - 8002:8000
     env_file:
       - .env
-    networks:
-      - admin
-      - users
+    # networks:
+    #   - admin
+      # - users
 
   # admin_queue:
   #   build: .
@@ -30,8 +30,8 @@ services:
   #   networks:
   #     - admin
 
-networks:
-  admin:
-  users:
-    external:
-      name: users
+# networks:
+#   admin:
+#   users:
+#     external:
+#       name: users
