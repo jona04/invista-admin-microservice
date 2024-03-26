@@ -1,1 +1,1 @@
-web: gunicorn invista_backend.wsgi
+web: gunicorn app.wsgi
