@@ -692,8 +692,8 @@ class LoginApiView(APIView):
     
 
 class UserAPIView(APIView):
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
 
     def get(self, request, scope = ''):
         token = request.COOKIES.get('jwt')

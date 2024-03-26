@@ -8,6 +8,8 @@ admin/app/__pycache__/*
 *.pyc
 .pyc 
 
+.vscode/
+
 # C extensions
 *.so
 
