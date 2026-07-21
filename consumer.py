@@ -1,6 +1,6 @@
-from confluent_kafka import Consumer
-import core.listeners
-import os, json
+# from confluent_kafka import Consumer
+# import core.listeners
+# import os, json
 
 # conf = {
 #         'bootstrap.servers': os.getenv('BOOTSTRAP_SERVERS'),
