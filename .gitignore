@@ -134,3 +134,25 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Terraform
+infra/.terraform/
+infra/.terraform.tfstate.lock.info
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+# tfvars com segredo. terraform.tfvars fica versionado de proposito:
+# contem apenas flags de etapa, nenhum valor sensivel.
+*.auto.tfvars
+secrets*.tfvars
+
+# Build do painel, baixado do bucket de origem sob demanda. Nao versionamos
+# artefato de build: veja infra/README.md para o comando que repopula.
+infra/frontend-dist/

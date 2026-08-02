@@ -13,6 +13,13 @@ https://docs.djangoproject.com/en/1.8/ref/settings/
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+from dotenv import load_dotenv
+
+# O manage.py ja carrega o .env, mas o wsgi nao passa por ele: sob gunicorn as
+# settings sao importadas direto. Carregar aqui cobre os dois caminhos.
+load_dotenv()
+
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -20,7 +27,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'zyr=w7=w7hr_n^c#epr-=#r_s4cg!q^ci$z$89z2w+oh6redce'
+# Assina as sessoes do Django e os JWT emitidos em core/authentication.py.
+# Sem valor padrao de proposito: e melhor a aplicacao nao subir do que subir
+# assinando token com um segredo conhecido.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "SECRET_KEY nao definida. Configure no .env local ou nas variaveis de "
+        "ambiente do deploy."
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
