@@ -36,6 +36,20 @@ def _list_from_env(name, default):
     return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
+def _bool_from_env(name, default="False"):
+    """Read a boolean env var, accepting the usual truthy spellings.
+
+    Args:
+        name: Environment variable name.
+        default: Fallback used when the variable is unset.
+
+    Returns:
+        True when the value is one of "1", "true", "yes" or "on"
+        (case-insensitive); False otherwise.
+    """
+    return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
@@ -51,7 +65,10 @@ if not SECRET_KEY:
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Defaults to False on purpose: the unsafe value has to be opted into
+# explicitly, so forgetting to set the variable fails closed. With debug on,
+# any error returns a stack trace exposing source code and configuration.
+DEBUG = _bool_from_env("DEBUG", "False")
 
 # Accepted Host headers. This used to be ['*'], which accepts any Host and
 # opens the door to header poisoning. ".herokuapp.com" covers the app domain

@@ -38,7 +38,7 @@ A combinação é perigosa: qualquer site pode fazer requisição autenticada us
 
 ## 🟠 Alto
 
-### 3. `DEBUG = True` em produção
+### 3. ~~`DEBUG = True` em produção~~ ✅ RESOLVIDO (ago/2026)
 
 [`app/settings.py`](../../app/settings.py). Qualquer erro devolve stack trace com trecho de código, caminho de arquivo e valores de configuração.
 
@@ -152,6 +152,7 @@ Sincronização manual para o S3 mais invalidação do CloudFront. Sem CI, sem v
 | **API sem autenticação** | ago/2026 | CRUD de negócio aberto para leitura e escrita. Default do DRF invertido para `IsAuthenticated`; exceções explícitas apenas em `login` e no health check |
 | **`register` e `user` abertos** | ago/2026 | permitiam criar conta sem credencial e, a partir dela, autenticar legitimamente — contornando toda a proteção. Agora exigem autenticação |
 | **CORS liberado com credenciais** | ago/2026 | `CORS_ORIGIN_ALLOW_ALL` + `CORS_ALLOW_CREDENTIALS` permitiam a qualquer site agir como o usuário logado. Substituído por lista explícita vinda do ambiente |
+| **`DEBUG = True` em produção** | ago/2026 | qualquer 404 devolvia o **mapa completo de rotas da API** (2331 bytes citando `app.urls` e as rotas `api/admin`), além de stack trace em erros. Agora vem do ambiente com padrão `False` |
 | **`ALLOWED_HOSTS = ['*']`** | ago/2026 | aceitava qualquer `Host`. Restrito a `.herokuapp.com` + localhost, configurável por ambiente |
 | `SECRET_KEY` hardcoded em repo público | ago/2026 | assinava os JWT; qualquer um forjava token. Movida para o ambiente **e rotacionada** |
 | Módulo WSGI inexistente no `Procfile`/`heroku.yml` | ago/2026 | apontava para `invista_backend.wsgi`; o correto é `app.wsgi` |

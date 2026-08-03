@@ -4,8 +4,8 @@ title: DEBUG por variável de ambiente
 phase: 1
 etapa: "Etapa 3 — Endurecimento da configuração"
 area: SEC
-status: todo
-completed_at:
+status: done
+completed_at: "2026-08-02 20:12 -03"
 depends_on: []
 blocks: []
 tests: none
@@ -50,21 +50,37 @@ tests: none
 - **Cobrir:** verificação manual — rota inexistente em produção não devolve stack trace.
 
 ## Definition of Done
-- [ ] `DEBUG` vem do ambiente, default `False`.
-- [ ] Produção com `DEBUG=False` confirmado (404 sem stack trace).
-- [ ] Ambiente local segue com `DEBUG=True` via `.env`.
-- [ ] `.env.example` atualizado.
-- [ ] **Docs atualizados:** doc [02](../../concepts/02_backend_architecture.md), tabela de configuração.
-- [ ] **Banco:** nenhuma. · **Infra:** nenhuma. · **Contrato de API:** nenhum. · **Frontend:** nenhuma.
-- [ ] **Segredo:** nenhum (mas a variável entra no `.env.example`).
-- [ ] **Modos de falha mapeados** — `DEBUG=False` com `ALLOWED_HOSTS` incompleto derruba tudo com 400; arquivos estáticos do Django admin deixam de ser servidos pelo runserver.
-- [ ] **Itens adiados varridos.** · **Auditoria de gambiarras.**
+- [x] `DEBUG` vem do ambiente, default `False`.
+- [x] `DEBUG=False` confirmado (404 sem vazamento).
+- [x] Ambiente local segue com `DEBUG=True` via `.env`.
+- [x] `.env.example` atualizado.
+- [x] **Docs atualizados:** doc [02](../../concepts/02_backend_architecture.md), tabela de configuração.
+- [x] **Banco:** nenhuma. · **Infra:** nenhuma. · **Contrato de API:** nenhum. · **Frontend:** nenhuma.
+- [x] **Segredo:** nenhum (mas a variável entra no `.env.example`).
+- [x] **Modos de falha mapeados** — `DEBUG=False` com `ALLOWED_HOSTS` incompleto derruba tudo com 400; arquivos estáticos do Django admin deixam de ser servidos pelo runserver.
+- [x] **Itens adiados varridos.** · **Auditoria de gambiarras.**
 
 ## Notas / Reconciliações
-- —
+
+**Implementado e validado em 02/08/2026.**
+
+`DEBUG` passou a vir do ambiente por um auxiliar (`_bool_from_env`), com **`False` como padrão** — o valor inseguro tem que ser escolhido explicitamente, então esquecer a variável falha fechado. Em produção não existe `.env` (ele é gitignored e não entra na imagem), logo a variável fica ausente e o padrão vale.
+
+**O vazamento era maior do que a descrição da task sugeria.** A comparação lado a lado de um 404:
+
+| | `DEBUG=False` | `DEBUG=True` |
+|---|---|---|
+| Tamanho da resposta | **178 bytes** | **2331 bytes** |
+| Cita `URLconf` | não | **sim** |
+| Cita `app.urls` | não | **sim** |
+| Lista as rotas `api/admin` | não | **sim** |
+
+Ou seja: com debug ligado, **qualquer 404 devolvia o mapa completo de rotas da API** — não era só stack trace em caso de erro. Isso esteve exposto em produção esse tempo todo.
+
+**Regressão verificada com `DEBUG=False`:** health check 200, rota de negócio 403 sem credencial e 200 com credencial, `POST` autenticado 201, `register` 403 sem credencial, `Host` inválido 400. Nada quebrou.
 
 ## Auditoria de gambiarras
-- [ ] — nenhuma *(preencher ao executar)*
+- [x] — nenhuma. A mudança troca um literal por leitura de ambiente, com auxiliar dedicado e docstring.
 
 ## Follow-ups
 - [ ] Servir os estáticos do Django admin em produção (whitenoise ou equivalente), se o admin for usado. *Quando:* se alguém precisar do `/admin/`. → README da fase.

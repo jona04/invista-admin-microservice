@@ -53,10 +53,10 @@ Tudo em [`app/settings.py`](../../app/settings.py). Pontos que importam:
 | Item | Valor | Observação |
 |---|---|---|
 | `SECRET_KEY` | do ambiente | **sem default** — a app recusa iniciar sem ela (doc [05](./05_authentication_and_security.md)) |
-| `DEBUG` | `True` | **problema em produção** — doc [11](./11_open_issues_and_technical_debt.md) |
-| `ALLOWED_HOSTS` | `['*']` | permissivo |
+| `DEBUG` | do ambiente, **`False`** por padrão | o valor inseguro tem que ser escolhido explicitamente |
+| `ALLOWED_HOSTS` | do ambiente; padrão `.herokuapp.com`, `localhost`, `127.0.0.1` | sem `*` |
 | `AUTH_USER_MODEL` | `core.User` | usuário customizado, login por e-mail |
-| `CORS_ORIGIN_ALLOW_ALL` | `True` | permissivo — doc [11](./11_open_issues_and_technical_debt.md) |
+| `CORS_ALLOWED_ORIGINS` | do ambiente; padrão = domínio do painel + localhost | substituiu `CORS_ORIGIN_ALLOW_ALL` |
 | `CACHES` | Redis em `admin_redis:6379` | host de compose; **não resolve no Heroku** |
 | `DATABASES` | Postgres via variáveis `DB_*` | injetadas pelo addon do Heroku |
 
