@@ -52,7 +52,30 @@ Este repositório só tem o backend. O projeto Angular que gera o build **não f
 
 Agrava: o serviço que ele consulta (`USERS_MS = http://users-ms:8000`) é hostname de docker-compose e **não resolve no Heroku**, então a chamada falha **sempre**.
 
-### 6. Zero testes automatizados
+### 6. As migrations não reconstroem o banco do zero
+
+Descoberto em 02/08/2026, ao tentar montar um banco de teste. Rodar as migrations numa base limpa falha:
+
+```
+ValueError: Related model 'core.user' cannot be resolved
+```
+
+Causa: o modelo `User` só é criado na **última** migration ([`0020_usertoken_user.py`](../../core/migrations/0020_usertoken_user.py)), enquanto `AUTH_USER_MODEL = "core.User"` e migrations anteriores já referenciam esse modelo. A ordem é inconsistente.
+
+Produção funciona porque a base foi construída **incrementalmente** ao longo de anos, cada migration aplicada sobre o estado da época. Mas nenhum ambiente novo pode ser criado a partir do código.
+
+Duas consequências:
+
+- **Bloqueia testes automatizados** — a suíte precisa de um banco limpo. É pré-requisito da [Fase 4](../backlog/phase-4-test-safety-net.md).
+- **Risco de recuperação de desastre** — se a base de produção for perdida, as migrations sozinhas **não** reconstroem o schema. O backup do Heroku Postgres passa a ser o único caminho de volta.
+
+### 7. O ambiente local aponta para o banco de produção
+
+O [`docker-compose.yml`](../../docker-compose.yml) **não sobe banco nenhum** — só a aplicação, lendo o [`.env`](../../.env.example). Como o `.env` carrega as credenciais do Heroku Postgres, `docker compose up` conecta na **base de produção**. Qualquer teste local que escreva (inclusive um simples login, que grava em `UserToken`) altera dados reais.
+
+Contorno documentado em [09](./09_deployment_and_environments.md): subir um Postgres local e copiar o schema de produção. A correção definitiva é o compose ter o próprio serviço de banco.
+
+### 8. Zero testes automatizados
 
 [`core/tests.py`](../../core/tests.py) tem 3 linhas e **nenhuma função de teste**. Não há rede de segurança para nenhuma mudança. `pytest`, `pytest-django` e `pytest-cov` estão nas dependências, sem uso.
 
@@ -60,35 +83,35 @@ Agrava: o serviço que ele consulta (`USERS_MS = http://users-ms:8000`) é hostn
 
 ## 🟡 Médio
 
-### 7. `USERS_MS` obrigatória no boot, por acidente
+### 9. `USERS_MS` obrigatória no boot, por acidente
 
 [`core/services.py`](../../core/services.py) monta `os.getenv('USERS_MS') + '/api/'` no nível do módulo. Sem a variável, `TypeError` e o worker não sobe. A variável precisa existir mesmo apontando para lugar nenhum. Efeito colateral de código morto ([01](./01_system_overview.md)).
 
-### 8. `CACHES` aponta para Redis inexistente
+### 10. `CACHES` aponta para Redis inexistente
 
 `redis://admin_redis:6379/0` — hostname de compose. No Heroku não resolve. Qualquer uso de cache falharia; hoje não há uso, então passa despercebido.
 
-### 9. Dinheiro em `FloatField`
+### 11. Dinheiro em `FloatField`
 
 `Chapa.valor`, `Servico.valor_total_servico`, `Nota.valor_total_nota`, `Nota.desconto` usam ponto flutuante binário — erro de arredondamento acumula em soma. Só `EntradaChapa.valor_unitario` usa `DecimalField`. Ver [03](./03_domain_model.md).
 
-### 10. Cookie sem `secure` nem `samesite`
+### 12. Cookie sem `secure` nem `samesite`
 
 [`core/views.py:662`](../../core/views.py#L662) define só `httponly=True`. Sem `secure`, o cookie pode trafegar em HTTP; sem `samesite`, fica exposto a envio cross-site.
 
-### 11. `ALLOWED_HOSTS = ['*']`
+### 13. `ALLOWED_HOSTS = ['*']`
 
 Aceita qualquer `Host`, abrindo espaço para envenenamento de cabeçalho.
 
-### 12. `Nota.numero`: property sombreia o campo
+### 14. `Nota.numero`: property sombreia o campo
 
 O número da nota é sempre `id + 1000`, e o valor gravado na coluna nunca é lido. A numeração não é editável e depende da sequência do banco. Detalhe em [03](./03_domain_model.md).
 
-### 13. `UserToken.user_id` não é ForeignKey
+### 15. `UserToken.user_id` não é ForeignKey
 
 Sem integridade referencial: apagar um usuário deixa tokens órfãos na tabela para sempre.
 
-### 14. Build do frontend de março/2024
+### 16. Build do frontend de março/2024
 
 Artefato com mais de dois anos, com dependência externa **quebrada**: `tbrindes.s3-sa-east-1.amazonaws.com/Captura` devolve **403** e está em bucket de conta desconhecida ([06](./06_frontend_admin.md)).
 
@@ -98,25 +121,25 @@ Artefato com mais de dois anos, com dependência externa **quebrada**: `tbrindes
 
 | # | Item | Onde |
 |---|---|---|
-| 15 | `SaidaChapa.observacao` declarado duas vezes | [`core/models.py`](../../core/models.py) |
-| 16 | `MessageMiddleware` duplicado no `MIDDLEWARE` | [`app/settings.py`](../../app/settings.py) |
-| 17 | Código Kafka morto (`app/producer.py`, `consumer.py`) — tudo comentado | raiz |
-| 18 | `django-rest_framework==0.1.0` (pacote-stub) convivendo com `djangorestframework` | [`requirements.txt`](../../requirements.txt) |
-| 19 | Sem paginação nas listagens — devolvem a tabela inteira | [`core/views.py`](../../core/views.py) |
-| 20 | Sem versionamento de API | [`core/urls.py`](../../core/urls.py) |
-| 21 | Erros de auth devolvem **403** em vez de 401 | DRF |
+| 17 | `SaidaChapa.observacao` declarado duas vezes | [`core/models.py`](../../core/models.py) |
+| 18 | `MessageMiddleware` duplicado no `MIDDLEWARE` | [`app/settings.py`](../../app/settings.py) |
+| 19 | Código Kafka morto (`app/producer.py`, `consumer.py`) — tudo comentado | raiz |
+| 20 | `django-rest_framework==0.1.0` (pacote-stub) convivendo com `djangorestframework` | [`requirements.txt`](../../requirements.txt) |
+| 21 | Sem paginação nas listagens — devolvem a tabela inteira | [`core/views.py`](../../core/views.py) |
+| 22 | Sem versionamento de API | [`core/urls.py`](../../core/urls.py) |
+| 23 | Erros de auth devolvem **403** em vez de 401 | DRF |
 
 ---
 
 ## Infraestrutura pendente
 
-### 22. Recursos da conta AWS antiga
+### 24. Recursos da conta AWS antiga
 
 Depois da migração ([10](./10_aws_account_migration_playbook.md)), a conta de origem ainda tem 6 recursos do projeto: distribuição CloudFront (sem alias), bucket de origem, hosted zone órfã, dois certificados ACM e uma OAI.
 
 Custam ~US$ 0,50/mês e **mantêm o rollback barato**. Manter alguns dias é deliberado; apagar exige cuidado porque **a conta hospeda outros projetos no ar** — ver §4 do doc [10](./10_aws_account_migration_playbook.md).
 
-### 23. Deploy do frontend sem pipeline
+### 25. Deploy do frontend sem pipeline
 
 Sincronização manual para o S3 mais invalidação do CloudFront. Sem CI, sem verificação, sem rollback automatizado ([09](./09_deployment_and_environments.md)).
 

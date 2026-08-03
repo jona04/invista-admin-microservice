@@ -14,11 +14,11 @@ tests: [integration]
 # P5-CLEAN-03 — Resolver o `CACHES` órfão
 
 ## Contexto
-[`app/settings.py`](../../../app/settings.py) configura `django_redis` apontando para `redis://admin_redis:6379/0` — hostname de docker-compose que **não resolve no Heroku**. Nenhum código usa cache hoje, então a configuração inválida passa despercebida; no dia em que alguém usar, falha em produção ([11](../../concepts/11_open_issues_and_technical_debt.md) §8).
+[`app/settings.py`](../../../app/settings.py) configura `django_redis` apontando para `redis://admin_redis:6379/0` — hostname de docker-compose que **não resolve no Heroku**. Nenhum código usa cache hoje, então a configuração inválida passa despercebida; no dia em que alguém usar, falha em produção ([11](../../concepts/11_open_issues_and_technical_debt.md) §10).
 
 ## Docs de referência
 - [02 — Backend Architecture](../../concepts/02_backend_architecture.md)
-- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §8
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §10
 
 ## Escopo (o que ENTRA)
 - Confirmar que nada usa cache.
@@ -52,7 +52,7 @@ tests: [integration]
 - [ ] `CACHES` removido ou configurável, com a decisão registrada.
 - [ ] `django-redis` fora do `requirements.txt`, se removido.
 - [ ] Suíte verde; aplicação sobe local e em produção.
-- [ ] **Docs atualizados:** doc [02](../../concepts/02_backend_architecture.md), tabela de configuração; doc [11](../../concepts/11_open_issues_and_technical_debt.md) §8 para "Já resolvido".
+- [ ] **Docs atualizados:** doc [02](../../concepts/02_backend_architecture.md), tabela de configuração; doc [11](../../concepts/11_open_issues_and_technical_debt.md) §10 para "Já resolvido".
 - [ ] **Banco:** nenhuma. · **Infra:** nenhuma. · **Contrato de API:** nenhum. · **Segredo:** nenhum. · **Frontend:** nenhuma.
 - [ ] **Modos de falha mapeados** — se algo usar cache indiretamente (biblioteca de sessão, throttling do DRF), remover muda o comportamento; conferir antes.
 - [ ] **Itens adiados varridos.** · **Auditoria de gambiarras.**

@@ -8,7 +8,7 @@ from rest_framework import exceptions
 from collections import defaultdict
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from .authentication import JWTAuthentication
 import datetime
 
@@ -617,6 +617,11 @@ class EstoqueAPIView(APIView):
   
 
 class RegisterApiView(APIView):
+    # ABERTO TEMPORARIAMENTE. Preserva o comportamento atual enquanto esta task
+    # (P1-SEC-02) fecha apenas as views de negocio. Fechar este endpoint e a
+    # P1-SEC-03 — sem ela, qualquer pessoa continua criando conta.
+    permission_classes = [AllowAny]
+
     def post(self, request):
         data = request.data
         if data['password'] != data['password_confirm']:
@@ -638,6 +643,10 @@ class RegisterApiView(APIView):
 
 
 class LoginApiView(APIView):
+    # Aberto DEFINITIVAMENTE: e o endpoint que emite a credencial. Exigir
+    # autenticacao aqui tornaria impossivel autenticar.
+    permission_classes = [AllowAny]
+
     def post(self, request):
         request.data['scope'] = 'admin'
 
@@ -692,8 +701,9 @@ class LoginApiView(APIView):
     
 
 class UserAPIView(APIView):
-    # authentication_classes = [JWTAuthentication]
-    # permission_classes = [IsAuthenticated]
+    # ABERTO TEMPORARIAMENTE, pelo mesmo motivo do RegisterApiView acima.
+    # Fechar e limpar este bloco e a P1-SEC-03.
+    permission_classes = [AllowAny]
 
     def get(self, request, scope = ''):
         token = request.COOKIES.get('jwt')

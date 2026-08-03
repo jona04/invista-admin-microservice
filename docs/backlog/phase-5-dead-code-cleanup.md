@@ -2,7 +2,7 @@
 
 > Objetivo: remover os vestígios de uma arquitetura distribuída que nunca entrou em operação. Kafka comentado, um middleware que não protege nada, um cliente HTTP para um serviço inexistente e um cache apontando para um Redis que não resolve. O custo desse resíduo não é performance — é **leitura**: quem chega no código acredita que existe um microsserviço de usuários e um middleware de autenticação, e nenhum dos dois existe.
 
-Docs de referência: [01 — System Overview](../concepts/01_system_overview.md), [02 — Backend Architecture](../concepts/02_backend_architecture.md), [11 — Open Issues](../concepts/11_open_issues_and_technical_debt.md) §5, §7, §8, §15–17
+Docs de referência: [01 — System Overview](../concepts/01_system_overview.md), [02 — Backend Architecture](../concepts/02_backend_architecture.md), [11 — Open Issues](../concepts/11_open_issues_and_technical_debt.md) §5, §9, §10, §17, §18, §19
 
 > **Depende de:** [Fase 4](./phase-4-test-safety-net.md) — remover código sem suíte de testes é apostar. Com a rede montada, cada remoção é verificável.
 

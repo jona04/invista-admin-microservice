@@ -14,11 +14,11 @@ tests: [integration]
 # P1-SEC-04 — Restringir CORS e ALLOWED_HOSTS
 
 ## Contexto
-`CORS_ORIGIN_ALLOW_ALL = True` combinado com `CORS_ALLOW_CREDENTIALS = True` permite que **qualquer site** faça requisição autenticada usando o cookie da vítima. `ALLOWED_HOSTS = ['*']` aceita qualquer `Host`. Ver [11](../../concepts/11_open_issues_and_technical_debt.md) §2 e §11.
+`CORS_ORIGIN_ALLOW_ALL = True` combinado com `CORS_ALLOW_CREDENTIALS = True` permite que **qualquer site** faça requisição autenticada usando o cookie da vítima. `ALLOWED_HOSTS = ['*']` aceita qualquer `Host`. Ver [11](../../concepts/11_open_issues_and_technical_debt.md) §2 e §13.
 
 ## Docs de referência
 - [05 — Authentication and Security](../../concepts/05_authentication_and_security.md)
-- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §2, §11
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §2, §13
 
 ## Escopo (o que ENTRA)
 - Trocar `CORS_ORIGIN_ALLOW_ALL` por `CORS_ALLOWED_ORIGINS` com a lista explícita de origens do painel.

@@ -14,7 +14,7 @@ tests: [unit]
 # P5-CLEAN-04 — Limpar duplicações em modelos e settings
 
 ## Contexto
-Ruídos pequenos que confundem quem lê o código ([11](../../concepts/11_open_issues_and_technical_debt.md) §15, §16, §18): campo declarado duas vezes, middleware repetido e um pacote-stub convivendo com o pacote real.
+Ruídos pequenos que confundem quem lê o código ([11](../../concepts/11_open_issues_and_technical_debt.md) §17, §18, §20): campo declarado duas vezes, middleware repetido e um pacote-stub convivendo com o pacote real.
 
 ## Docs de referência
 - [03 — Domain Model](../../concepts/03_domain_model.md)
@@ -55,7 +55,7 @@ Ruídos pequenos que confundem quem lê o código ([11](../../concepts/11_open_i
 - [ ] Decisão sobre o pacote-stub aplicada, com `djangorestframework` pinado.
 - [ ] Decisão sobre o `Procfile` registrada.
 - [ ] Suíte verde; aplicação sobe.
-- [ ] **Docs atualizados:** docs [03](../../concepts/03_domain_model.md) e [02](../../concepts/02_backend_architecture.md); doc [11](../../concepts/11_open_issues_and_technical_debt.md) §15, §16, §18 para "Já resolvido".
+- [ ] **Docs atualizados:** docs [03](../../concepts/03_domain_model.md) e [02](../../concepts/02_backend_architecture.md); doc [11](../../concepts/11_open_issues_and_technical_debt.md) §17, §18, §20 para "Já resolvido".
 - [ ] **Banco:** se a migration **não** sair vazia, entender por quê antes de aplicar e atualizar o doc [03](../../concepts/03_domain_model.md).
 - [ ] **Infra:** nenhuma. · **Contrato de API:** nenhum. · **Segredo:** nenhum. · **Frontend:** nenhuma.
 - [ ] **Modos de falha mapeados** — remover o stub sem pinar o pacote real deixa a versão do DRF solta e um build futuro pode trazer versão incompatível; apagar o `Procfile` quebraria o deploy se o stack mudasse de `container` para buildpack.

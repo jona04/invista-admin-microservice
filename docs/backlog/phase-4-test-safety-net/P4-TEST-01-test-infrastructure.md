@@ -16,10 +16,16 @@ tests: [unit]
 ## Contexto
 `pytest`, `pytest-django` e `pytest-cov` estão no [`requirements.txt`](../../../requirements.txt) mas nunca foram configurados. Não há `pytest.ini`, settings de teste nem fixtures. Sem isso, nenhuma das tasks seguintes existe.
 
+> ⚠️ **Bloqueio conhecido, descoberto em 02/08/2026 (durante `P1-SEC-02`):** as migrations **não reconstroem o banco do zero** ([11](../../concepts/11_open_issues_and_technical_debt.md) §6). Uma base limpa falha com `ValueError: Related model 'core.user' cannot be resolved`, porque o modelo `User` só é criado na última migration enquanto migrations anteriores já o referenciam.
+>
+> Isso **precede** a configuração do pytest: sem banco limpo não há suíte. Consertar a ordem das migrations passa a fazer parte desta task — e resolve, de quebra, um risco de recuperação de desastre (hoje, perder a base de produção significa não conseguir recriar o schema pelo código).
+
 ## Docs de referência
 - [02 — Backend Architecture](../../concepts/02_backend_architecture.md)
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §6
 
 ## Escopo (o que ENTRA)
+- **Corrigir a ordem das migrations** para que uma base limpa possa ser construída (ver o bloqueio acima). É pré-requisito de tudo o mais.
 - Configuração do `pytest-django` (`pytest.ini` ou `setup.cfg`) apontando o módulo de settings.
 - Settings de teste: banco isolado, `DEBUG=False`, `SECRET_KEY` fixa de teste.
 - Fixtures reutilizáveis: usuário comum autenticado, administrador autenticado, cliente não autenticado.

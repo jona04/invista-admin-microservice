@@ -76,13 +76,22 @@ Note a assimetria: apagar uma `Nota` **cascateia** em `GrupoClienteNota` mas é 
 
 `Nota` declara `numero` **duas vezes**: como campo persistido ([`core/models.py:154`](../../core/models.py#L154)) e como `@property` que devolve `self.id + 1000` ([`core/models.py:176`](../../core/models.py#L176)).
 
-Em Python o segundo vence: **a property sombreia o campo**. Logo:
+Em Python o segundo vence: **a property sombreia o campo**, e o Django nunca chega a registrá-lo. Confirmado por introspecção:
 
-- o valor gravado na coluna `numero` **nunca é lido** pelo código;
+```python
+>>> [f.name for f in Nota._meta.fields]
+['id', 'desconto', 'created_at', 'uploaded_at', 'cliente_nome', 'obs', 'valor_total_nota', 'status']
+```
+
+`numero` **não está lá**. E a migration [`0010_remove_nota_numero.py`](../../core/migrations/0010_remove_nota_numero.py) removeu a coluna do banco em 2020 — coerente: para o Django o campo deixou de existir no momento em que a property foi adicionada.
+
+Logo:
+
+- **não existe coluna `numero`** na tabela; a declaração no modelo é código morto;
 - o número exibido é sempre `id + 1000`, derivado da chave primária;
 - gravar em `nota.numero` levanta erro, porque a property não tem setter.
 
-Consequência prática: o "número da nota" **não é editável** e depende da sequência do banco. Se algum dia for preciso numeração independente, remover a property e passar a usar o campo — mas isso muda todos os números já exibidos.
+Consequência prática: o "número da nota" **não é editável** e depende da sequência do banco. Se algum dia for preciso numeração independente, é preciso remover a property, **recriar a coluna por migration** e migrar os valores — e isso muda todos os números já exibidos. Não é uma limpeza; é mudança de regra de negócio.
 
 ### `SaidaChapa.observacao` duplicado
 

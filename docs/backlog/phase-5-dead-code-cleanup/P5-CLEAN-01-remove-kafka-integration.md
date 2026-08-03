@@ -18,7 +18,7 @@ tests: [integration]
 
 ## Docs de referência
 - [01 — System Overview](../../concepts/01_system_overview.md)
-- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §17
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §19
 
 ## Escopo (o que ENTRA)
 - Apagar `app/producer.py` e `consumer.py`.
@@ -57,7 +57,7 @@ tests: [integration]
 - [ ] Nenhuma referência a Kafka no repositório.
 - [ ] `confluent-kafka` fora do `requirements.txt`.
 - [ ] Suíte verde; aplicação sobe local e em produção.
-- [ ] **Docs atualizados:** doc [01](../../concepts/01_system_overview.md) sem Kafka nos vestígios; doc [11](../../concepts/11_open_issues_and_technical_debt.md) §17 movido para "Já resolvido".
+- [ ] **Docs atualizados:** doc [01](../../concepts/01_system_overview.md) sem Kafka nos vestígios; doc [11](../../concepts/11_open_issues_and_technical_debt.md) §19 movido para "Já resolvido".
 - [ ] **Banco:** nenhuma. · **Infra:** nenhuma. · **Contrato de API:** nenhum. · **Segredo:** nenhum. · **Frontend:** nenhuma.
 - [ ] **Modos de falha mapeados** — `core/listeners.py` pode ser importado por outra coisa; conferir antes de apagar.
 - [ ] **Itens adiados varridos.** · **Auditoria de gambiarras.**

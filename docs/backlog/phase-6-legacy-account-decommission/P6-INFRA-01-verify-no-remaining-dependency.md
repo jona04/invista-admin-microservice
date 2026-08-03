@@ -77,7 +77,7 @@ Antes de apagar, é preciso **provar** — não presumir — que o sistema não 
 - [ ] Distribuição antiga com `Aliases.Quantity = 0`.
 - [ ] Lista final, **por ID**, dos recursos a apagar — e a lista do que **não** apagar.
 - [ ] Linha de base dos sites de terceiros registrada (todos no ar).
-- [ ] **Docs atualizados:** doc [11](../../concepts/11_open_issues_and_technical_debt.md) §22 com a verificação e as listas.
+- [ ] **Docs atualizados:** doc [11](../../concepts/11_open_issues_and_technical_debt.md) §24 com a verificação e as listas.
 - [ ] **Banco:** nenhuma. · **Contrato de API:** nenhum. · **Segredo:** nenhum. · **Frontend:** nenhuma.
 - [ ] **Infra:** nenhuma alteração — só leitura.
 - [ ] **Modos de falha mapeados** — resolvedor com cache pode mascarar a delegação; conferir em mais de um resolvedor público. Um bucket pode ser origem de mais de uma distribuição.

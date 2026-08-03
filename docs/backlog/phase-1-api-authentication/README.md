@@ -23,7 +23,7 @@ Docs de referência: [04 — API Contracts](../../concepts/04_api_contracts.md),
 
 | # | ID | Task | Etapa | Status | Depende de |
 |---|----|------|-------|--------|-----------|
-| 1 | [P1-SEC-01](./P1-SEC-01-map-frontend-api-calls.md) | Mapear, a partir do bundle, todos os endpoints que o painel realmente chama | 1 | `todo` | — |
+| 1 | [P1-SEC-01](./P1-SEC-01-map-frontend-api-calls.md) | Mapear, a partir do bundle, todos os endpoints que o painel realmente chama | 1 | ✅ done | — |
 | 2 | [P1-SEC-02](./P1-SEC-02-enforce-authentication-on-business-views.md) | Aplicar autenticação nas views de negócio (clientes, chapas, serviços, notas, estoque) | 2 | `todo` | P1-SEC-01 |
 | 3 | [P1-SEC-03](./P1-SEC-03-restrict-user-management-endpoints.md) | Fechar `register`, `user` e `user/<scope>` | 2 | `todo` | P1-SEC-01 |
 | 4 | [P1-SEC-04](./P1-SEC-04-restrict-cors-and-allowed-hosts.md) | Restringir CORS a origens conhecidas e tirar o `*` de `ALLOWED_HOSTS` | 3 | `todo` | P1-SEC-01 |
@@ -45,5 +45,16 @@ Onda 3  │ P1-SEC-06
 
 > **Deploy:** `P1-SEC-02` e `P1-SEC-03` mudam comportamento visível. Subir **uma de cada vez**, validando o painel entre elas — se algo quebrar, você sabe qual foi. Ordem e checklist em [09](../../concepts/09_deployment_and_environments.md).
 
+## Achados do levantamento (`P1-SEC-01`)
+
+> Registrados no doc [04](../../concepts/04_api_contracts.md). Três mudam o planejamento:
+
+- ✅ **O painel envia o cookie em toda requisição** (interceptor global com `withCredentials: true`). O maior risco da `P1-SEC-02` não se materializa.
+- ⚠️ **Não há guarda de rota no painel.** A proteção depende inteiramente do backend — o que reforça a urgência de `P1-SEC-02`.
+- ⚠️ **`/api/admin/financeiros` é chamada morta** — o painel a invoca, o Django não a expõe (404).
+- ℹ️ **A tela `users` existe mas não consome a API** — insumo para a [Fase 3](../phase-3-login-and-user-management.md).
+
 ## Follow-ups / débitos técnicos
-- [ ] *(preencher conforme as tasks forem fechando)*
+- [ ] Remover o serviço `financeiros` do painel (chamada morta, 404) — origem `P1-SEC-01`. *Quando:* na [Fase 2](../phase-2-frontend-recovery.md), com o fonte em mãos.
+- [ ] Decidir o destino de `/users/`, `/users/<pk>` e `/user/<scope>` (expostos, não usados) — origem `P1-SEC-01`. **Não remover agora:** `users/` é o que a [Fase 3](../phase-3-login-and-user-management.md) vai consumir. *Quando:* ao fechar a Fase 3.
+- [ ] Aproveitar o componente da tela `users` em `P3-FRONT-01` — origem `P1-SEC-01`. → [Fase 3](../phase-3-login-and-user-management.md).

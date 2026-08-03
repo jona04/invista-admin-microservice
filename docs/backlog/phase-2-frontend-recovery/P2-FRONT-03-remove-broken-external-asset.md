@@ -14,11 +14,11 @@ tests: none
 # P2-FRONT-03 — Remover a dependência externa quebrada
 
 ## Contexto
-O bundle referencia `tbrindes.s3-sa-east-1.amazonaws.com/Captura`, que devolve **403** e está em bucket de conta desconhecida — não pertence a nenhuma das contas do projeto ([11](../../concepts/11_open_issues_and_technical_debt.md) §14).
+O bundle referencia `tbrindes.s3-sa-east-1.amazonaws.com/Captura`, que devolve **403** e está em bucket de conta desconhecida — não pertence a nenhuma das contas do projeto ([11](../../concepts/11_open_issues_and_technical_debt.md) §16).
 
 ## Docs de referência
 - [06 — Frontend Admin](../../concepts/06_frontend_admin.md)
-- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §14
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §16
 
 ## Escopo (o que ENTRA)
 - Localizar o uso no fonte e entender o que a imagem deveria mostrar.

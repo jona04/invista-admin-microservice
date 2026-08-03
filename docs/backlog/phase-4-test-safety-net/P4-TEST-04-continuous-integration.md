@@ -14,7 +14,7 @@ tests: none
 # P4-TEST-04 — CI: rodar a suíte a cada push
 
 ## Contexto
-Não há CI/CD nenhum no repositório ([11](../../concepts/11_open_issues_and_technical_debt.md) §23). Suíte que só roda quando alguém lembra não é rede de segurança.
+Não há CI/CD nenhum no repositório ([11](../../concepts/11_open_issues_and_technical_debt.md) §25). Suíte que só roda quando alguém lembra não é rede de segurança.
 
 ## Docs de referência
 - [09 — Deployment](../../concepts/09_deployment_and_environments.md)

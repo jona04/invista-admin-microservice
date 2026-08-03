@@ -71,10 +71,43 @@ Clientes, chapas, serviços, notas e estoque aceitam `GET`/`POST`/`PUT`/`DELETE`
 - [ ] **Auditoria de gambiarras.**
 
 ## Notas / Reconciliações
-- —
+
+**Implementação escolhida: default global fechado.** Em vez de repetir duas linhas em 16 classes, o `REST_FRAMEWORK` em [`app/settings.py`](../../../app/settings.py) define `IsAuthenticated` + `JWTAuthentication` como padrão. As exceções são explícitas e justificadas no próprio código:
+
+| Rota | Permissão | Motivo |
+|---|---|---|
+| `/` | `AllowAny` | health check; sonda de deploy, não expõe dado |
+| `/api/admin/login` | `AllowAny` | emite a credencial — fechá-la impediria autenticar |
+| `/api/admin/register` | `AllowAny` | **temporário** — fechar é `P1-SEC-03` |
+| `/api/admin/user`, `/user/<scope>` | `AllowAny` | **temporário** — fechar é `P1-SEC-03` |
+
+A raiz `/` precisou de tratamento explícito: ela usa `@api_view()` e portanto **é uma view DRF**, que o default global fecharia junto.
+
+**Verificação local completa, com ambiente isolado.** Como as migrations não constroem o schema do zero (ver abaixo), montei o ambiente copiando a **estrutura** de produção — operação de leitura — para um Postgres local em porta incomum. Procedimento documentado em [09](../../concepts/09_deployment_and_environments.md).
+
+Resultados, contra a aplicação real rodando sob `gunicorn`, pelo mesmo comando do Heroku:
+
+| Cenário | Resultado |
+|---|---|
+| Introspecção de todas as rotas | 27 com `IsAuthenticated` + `JWTAuthentication`; 4 com `AllowAny`, todas intencionais |
+| 14 rotas **sem credencial** | **403** em todas — zero respostas 200 |
+| `POST` / `DELETE` sem credencial | **403** |
+| Login | **200**, cookie `jwt` emitido |
+| 11 rotas **com credencial** | **200** em todas |
+| `POST` autenticado | **201** — recurso criado |
+| `DELETE` autenticado | **204** — recurso removido |
+| Health check `/` | **200** |
+
+Os dois sentidos estão provados: fecha para quem não tem credencial, funciona para quem tem. O ambiente local foi removido ao fim (container e processo), sem deixar porta ocupada.
+
+**Achado colateral — o ambiente local aponta para produção.** O `docker-compose.yml` não sobe banco; usa o `.env`, que carrega as credenciais do Heroku. `docker compose up` escreve na base real — inclusive um login, que grava em `UserToken`. Registrado como [11](../../concepts/11_open_issues_and_technical_debt.md) §7, com contorno documentado em [09](../../concepts/09_deployment_and_environments.md).
+
+**Achado colateral — as migrations não reconstroem o banco.** Ao tentar montar a base de teste, `ValueError: Related model 'core.user' cannot be resolved`. Registrado como [11](../../concepts/11_open_issues_and_technical_debt.md) §6 e incorporado ao escopo de `P4-TEST-01`. Além de bloquear testes, é risco de recuperação de desastre.
+
+**Achado colateral — `Nota.numero` não existe no banco.** A introspecção mostrou que `Nota._meta.fields` não inclui `numero`, e a migration `0010_remove_nota_numero` removeu a coluna em 2020. O doc [03](../../concepts/03_domain_model.md) foi corrigido: não é só "a property sombreia o campo", é que **a coluna não existe**.
 
 ## Auditoria de gambiarras
-- [ ] — nenhuma *(preencher ao executar)*
+- [x] **Manter `register` e `user` abertos com `AllowAny`** é subótimo — deixa dois buracos abertos por mais um deploy. *Melhor:* fechar tudo de uma vez. *Por que não:* separar mantém cada deploy verificável isoladamente; se o painel quebrar, sabe-se qual mudança causou. *Destino:* corrigido em `P1-SEC-03`, que remove exatamente esses dois `AllowAny`.
 
 ## Follow-ups
 - [ ] Autorização granular (quem pode apagar nota, quem só lê). *Quando:* se surgir necessidade de perfis distintos. → README da fase.

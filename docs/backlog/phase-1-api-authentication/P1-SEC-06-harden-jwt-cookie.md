@@ -14,11 +14,11 @@ tests: [integration]
 # P1-SEC-06 — Endurecer o cookie JWT
 
 ## Contexto
-[`core/views.py:662`](../../../core/views.py#L662) define o cookie com apenas `httponly=True`. Sem `secure`, ele pode trafegar em HTTP; sem `samesite`, fica exposto a envio cross-site ([11](../../concepts/11_open_issues_and_technical_debt.md) §10).
+[`core/views.py:662`](../../../core/views.py#L662) define o cookie com apenas `httponly=True`. Sem `secure`, ele pode trafegar em HTTP; sem `samesite`, fica exposto a envio cross-site ([11](../../concepts/11_open_issues_and_technical_debt.md) §12).
 
 ## Docs de referência
 - [05 — Authentication and Security](../../concepts/05_authentication_and_security.md)
-- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §10
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §12
 
 ## Escopo (o que ENTRA)
 - `secure=True` e `samesite` explícito no `set_cookie` do login.

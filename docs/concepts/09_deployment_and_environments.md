@@ -17,11 +17,78 @@ Só existem **local** e **produção**. Não há staging.
 
 ### Local
 
+> ⚠️ **O `docker-compose.yml` não sobe banco nenhum.** Ele só levanta a aplicação e lê o [`.env`](../../.env.example), que hoje contém as credenciais do **Postgres de produção**. Rodar `docker compose up` com o `.env` atual significa **escrever no banco de produção**. Use o procedimento abaixo em vez disso.
+
+#### Ambiente local isolado (recomendado)
+
+As migrations **não constroem o schema do zero** ([11](./11_open_issues_and_technical_debt.md) §6), então o caminho é copiar a estrutura de produção — só a estrutura, operação de leitura.
+
+**1. Subir um Postgres local** em porta incomum, para não colidir com outros projetos:
+
 ```sh
-docker compose up          # backend em localhost:8002
+docker run -d --name invista-db-local \
+  -e POSTGRES_PASSWORD=local -e POSTGRES_USER=local -e POSTGRES_DB=invista_local \
+  -p 55432:5432 postgres:16-alpine
 ```
 
-Lê o [`.env`](../../.env.example) (não versionado). Aponta para o **mesmo Postgres de produção** se você copiar as credenciais do Heroku — cuidado.
+**2. Copiar o schema de produção** (estrutura, sem dados):
+
+```sh
+DB_HOST=$(grep '^DB_HOST=' .env | cut -d= -f2-)
+DB_PORT=$(grep '^DB_PORT=' .env | cut -d= -f2-)
+DB_USERNAME=$(grep '^DB_USERNAME=' .env | cut -d= -f2-)
+DB_DATABASE=$(grep '^DB_DATABASE=' .env | cut -d= -f2-)
+DB_PASSWORD=$(grep '^DB_PASSWORD=' .env | cut -d= -f2-)
+
+PGPASSWORD="$DB_PASSWORD" pg_dump --host="$DB_HOST" --port="$DB_PORT" \
+  --username="$DB_USERNAME" --dbname="$DB_DATABASE" \
+  --schema-only --no-owner --no-privileges > /tmp/schema.sql
+
+docker exec -i invista-db-local psql -U local -d invista_local -q < /tmp/schema.sql
+```
+
+> O `.env` **não é "sourceável"** pelo shell — a `SECRET_KEY` tem `)` e `!` sem aspas. Extraia variável por variável, como acima.
+
+**3. Apontar a aplicação para o banco local** e criar um usuário de teste:
+
+```sh
+export SECRET_KEY='chave-local-de-teste' USERS_MS='http://users-ms:8000'
+export DB_HOST=127.0.0.1 DB_PORT=55432 DB_USERNAME=local DB_PASSWORD=local DB_DATABASE=invista_local
+
+venv/bin/python manage.py shell -c "
+from core.models import User
+User.objects.create_user(email='teste.local@invista.dev', password='SenhaLocal!2026')
+"
+```
+
+**4. Rodar** pelo mesmo comando que o Heroku usa, em porta livre:
+
+```sh
+venv/bin/gunicorn app.wsgi:application --bind 127.0.0.1:8791
+```
+
+**5. Testar** os dois caminhos:
+
+```sh
+# sem credencial — deve dar 403
+curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8791/api/admin/chapas
+
+# login — devolve 200 e grava o cookie
+curl -s -c /tmp/cookies.txt -X POST -H 'Content-Type: application/json' \
+  -d '{"email":"teste.local@invista.dev","password":"SenhaLocal!2026"}' \
+  http://127.0.0.1:8791/api/admin/login
+
+# com credencial — deve dar 200
+curl -s -o /dev/null -w '%{http_code}\n' -b /tmp/cookies.txt http://127.0.0.1:8791/api/admin/chapas
+```
+
+**6. Limpar** ao terminar:
+
+```sh
+docker rm -f invista-db-local
+```
+
+> **Portas:** confira o que já está em uso antes (`ss -ltn`). Este procedimento usa `55432` e `8791` justamente por serem incomuns.
 
 ### Produção
 

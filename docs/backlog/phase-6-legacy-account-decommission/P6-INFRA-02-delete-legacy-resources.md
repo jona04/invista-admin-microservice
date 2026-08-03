@@ -19,7 +19,7 @@ Com a verificação de `P6-INFRA-01` feita, esta task remove os 6 recursos do pr
 ## Docs de referência
 - [10 — Migration Playbook](../../concepts/10_aws_account_migration_playbook.md) §5 Etapa 8
 - [07 — AWS Infrastructure](../../concepts/07_aws_infrastructure.md)
-- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §22
+- [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §24
 
 ## Escopo (o que ENTRA)
 Apagar, **por ID explícito**, e nesta ordem:
@@ -36,7 +36,7 @@ Apagar, **por ID explícito**, e nesta ordem:
 - Fechar a conta.
 
 ## Arquivos a criar/alterar
-- `docs/concepts/11_open_issues_and_technical_debt.md` (alterar) — §22 fechado
+- `docs/concepts/11_open_issues_and_technical_debt.md` (alterar) — §24 fechado
 
 ## Passos
 1. **Antes de tocar em qualquer coisa**, reconferir a linha de base:
@@ -61,7 +61,7 @@ Apagar, **por ID explícito**, e nesta ordem:
 - [ ] Painel no ar — verificado depois de **cada** remoção.
 - [ ] Sites de terceiros na mesma conta no ar — verificado depois de **cada** remoção.
 - [ ] Nenhum recurso fora da lista de `P6-INFRA-01` foi tocado.
-- [ ] **Docs atualizados:** doc [11](../../concepts/11_open_issues_and_technical_debt.md) §22 fechado; doc [07](../../concepts/07_aws_infrastructure.md) se algo mudar na conta nova (não deve).
+- [ ] **Docs atualizados:** doc [11](../../concepts/11_open_issues_and_technical_debt.md) §24 fechado; doc [07](../../concepts/07_aws_infrastructure.md) se algo mudar na conta nova (não deve).
 - [ ] **Banco:** nenhuma. · **Contrato de API:** nenhum. · **Segredo:** nenhum. · **Frontend:** nenhuma.
 - [ ] **Infra:** os recursos apagados são da conta **antiga**, fora do Terraform — registrar que a remoção foi manual e por quê (o Terraform nunca os gerenciou).
 - [ ] **Modos de falha mapeados** — apagar a distribuição errada derruba site de terceiro (mitigação: ID explícito + verificação entre remoções); bucket versionado precisa ter as versões removidas antes; a hosted zone recusa remoção com registros dentro; certificado em uso não é apagável — se recusar, **é sinal de que ainda está associado a algo**, e aí a premissa da fase está errada: parar e investigar.

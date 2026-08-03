@@ -81,6 +81,66 @@ Todas as rotas abaixo expõem o CRUD completo (`GET`/`POST`/`PUT`/`DELETE`) via 
 | `/api/admin/categoria-entrada` | GET, POST | ❌ |
 | `/api/admin/categoria-saida` | GET, POST | ❌ |
 
+## O que o painel realmente consome
+
+> Levantado em **02/08/2026** (`P1-SEC-01`), extraindo do bundle em produção — o hash do arquivo analisado bate com o servido pelo CloudFront. O fonte do frontend não está disponível ([06](./06_frontend_admin.md)), então o bundle é a fonte.
+
+O painel guarda a base numa única constante e monta os caminhos por concatenação:
+
+```js
+Gt_api = "https://<app>.herokuapp.com/api/admin"
+```
+
+**Todas as requisições carregam o cookie.** Há um interceptor HTTP global que clona cada requisição com `withCredentials: true`:
+
+```js
+intercept(e,i){ const r = e.clone({withCredentials:!0}); return i.handle(r) }
+```
+
+Isso é o que torna seguro exigir autenticação: as credenciais já viajam.
+
+### Serviços de recurso
+
+Dez serviços, cada um com um `endpoint` próprio e os métodos genéricos abaixo:
+
+| Método do serviço | Requisição |
+|---|---|
+| `all()` | `GET {endpoint}` |
+| `create(x)` | `POST {endpoint}` |
+| `update(id,x)` | `PUT {endpoint}/{id}` |
+| `delete(id)` | `DELETE {endpoint}/{id}` |
+| `allList(ini,fim)` | `GET {endpoint}/list?start=&end=` |
+| `relatorio(ini,fim)` | `GET {endpoint}/relatorio?start=&end=` |
+| `getFull(id)` | `GET {endpoint}/full/{id}` |
+| *(notas por serviço)* | `GET {endpoint}/nota/list` |
+
+Endpoints declarados: `categoria-entrada`, `categoria-saida`, `chapas`, `chapas-entrada`, `chapas-saida`, `clientes`, `estoque`, `financeiros`, `notas`, `servicos`.
+
+Chamadas diretas (fora do padrão de serviço): `login`, `logout`, `register`, `user`, `users/info`, `users/password`.
+
+### Os três conjuntos
+
+**A — usado pelo painel e existe no Django.** Tudo que está nas tabelas acima, exceto o que aparece em B e C.
+
+**B — exposto pelo Django e NÃO usado pelo painel:**
+
+| Rota | Observação |
+|---|---|
+| `/api/admin/users/` | lista de usuários — **existe a rota `users` no roteador do painel**, mas a tela não consome este endpoint |
+| `/api/admin/users/<pk>` | idem |
+| `/api/admin/user/<scope>` | nenhuma chamada no bundle |
+
+**C — usado pelo painel e NÃO existe no Django:**
+
+| Rota | Situação |
+|---|---|
+| `/api/admin/financeiros` | **404 em produção.** A rota está comentada em [`core/urls.py:14`](../../core/urls.py#L14). O painel tem um serviço apontando para ela; a chamada falha silenciosamente |
+
+### Outras observações do levantamento
+
+- **Não há guarda de rota no painel.** Os `canActivate` encontrados são do próprio roteador do Angular, não da aplicação — nenhuma rota é protegida no cliente. A proteção depende inteiramente do backend.
+- O painel tem telas em `/profile`, `/users` e `/register`, além das de negócio.
+
 ## Convenções observadas
 
 - **Sem barra final** nas rotas de negócio (`/api/admin/chapas`, não `/chapas/`). Chamar com barra dá 404.

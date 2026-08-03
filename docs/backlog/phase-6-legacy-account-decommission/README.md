@@ -4,7 +4,7 @@
 
 > Visão geral / trilha: [`../phase-6-legacy-account-decommission.md`](../phase-6-legacy-account-decommission.md). Este README é o **índice detalhado** das tasks.
 
-Docs de referência: [10 — Migration Playbook](../../concepts/10_aws_account_migration_playbook.md), [07 — AWS Infrastructure](../../concepts/07_aws_infrastructure.md), [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §22.
+Docs de referência: [10 — Migration Playbook](../../concepts/10_aws_account_migration_playbook.md), [07 — AWS Infrastructure](../../concepts/07_aws_infrastructure.md), [11 — Open Issues](../../concepts/11_open_issues_and_technical_debt.md) §24.
 
 ## Decisões de entrada (não redecidir)
 - **A conta de origem NÃO é fechada** — ela hospeda outros projetos no ar.
@@ -15,7 +15,7 @@ Docs de referência: [10 — Migration Playbook](../../concepts/10_aws_account_m
 ## Definition of Done da fase
 - Nenhum recurso do projeto na conta de origem.
 - Os demais projetos da conta continuam no ar — verificado antes e depois.
-- Doc [11](../../concepts/11_open_issues_and_technical_debt.md) §22 fechado.
+- Doc [11](../../concepts/11_open_issues_and_technical_debt.md) §24 fechado.
 
 ## Tasks
 

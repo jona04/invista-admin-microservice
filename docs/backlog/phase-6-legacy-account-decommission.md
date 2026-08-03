@@ -2,7 +2,7 @@
 
 > Objetivo: apagar os recursos que sobraram na conta AWS de origem após a migração de agosto/2026. São 6 recursos, custando ~US$ 0,50/mês. Ficaram de pé de propósito: enquanto a distribuição e o bucket antigos existirem, o rollback é trocar dois registros DNS. A fase encerra essa apólice depois de confirmado que ninguém mais depende dela.
 
-Docs de referência: [10 — AWS Account Migration Playbook](../concepts/10_aws_account_migration_playbook.md), [07 — AWS Infrastructure](../concepts/07_aws_infrastructure.md), [11 — Open Issues](../concepts/11_open_issues_and_technical_debt.md) §22
+Docs de referência: [10 — AWS Account Migration Playbook](../concepts/10_aws_account_migration_playbook.md), [07 — AWS Infrastructure](../concepts/07_aws_infrastructure.md), [11 — Open Issues](../concepts/11_open_issues_and_technical_debt.md) §24
 
 > ⚠️ **A conta de origem hospeda outros projetos, que estão no ar.** Esta fase apaga **apenas** os recursos deste projeto, por ID explícito. Ver §4 do doc [10](../concepts/10_aws_account_migration_playbook.md).
 
@@ -20,7 +20,7 @@ Docs de referência: [10 — AWS Account Migration Playbook](../concepts/10_aws_
 ## Definition of Done da fase
 - Nenhum recurso do projeto na conta de origem.
 - Os demais projetos da conta **continuam no ar** — verificado antes e depois.
-- Doc [11](../concepts/11_open_issues_and_technical_debt.md) §22 fechado.
+- Doc [11](../concepts/11_open_issues_and_technical_debt.md) §24 fechado.
 
 ---
 

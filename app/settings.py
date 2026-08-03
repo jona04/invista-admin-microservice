@@ -138,3 +138,16 @@ CORS_ORIGIN_ALLOW_ALL = True  # enables the frontend to access the backend
 CORS_ALLOW_CREDENTIALS = (
     True  # enables the frontend to get the cookies created by the backend
 )
+
+# O default do DRF passa a ser FECHADO: toda view exige autenticacao por JWT,
+# a menos que declare o contrario explicitamente. Assim uma view nova nasce
+# protegida, em vez de depender de alguem lembrar de proteger. As excecoes
+# estao marcadas com AllowAny e justificadas caso a caso.
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "core.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
+    ],
+}

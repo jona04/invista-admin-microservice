@@ -14,7 +14,7 @@ tests: none
 # P2-FRONT-04 — Deploy do frontend repetível
 
 ## Contexto
-Hoje o deploy do painel é sincronização manual para o S3 mais invalidação do CloudFront, sem procedimento escrito nem verificação ([11](../../concepts/11_open_issues_and_technical_debt.md) §23). Como o bucket é versionado, existe rollback — mas ninguém sabe o comando.
+Hoje o deploy do painel é sincronização manual para o S3 mais invalidação do CloudFront, sem procedimento escrito nem verificação ([11](../../concepts/11_open_issues_and_technical_debt.md) §25). Como o bucket é versionado, existe rollback — mas ninguém sabe o comando.
 
 ## Docs de referência
 - [06 — Frontend Admin](../../concepts/06_frontend_admin.md)
