@@ -16,31 +16,50 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 from dotenv import load_dotenv
 
-# O manage.py ja carrega o .env, mas o wsgi nao passa por ele: sob gunicorn as
-# settings sao importadas direto. Carregar aqui cobre os dois caminhos.
+# manage.py already loads the .env, but wsgi does not go through it: under
+# gunicorn the settings are imported directly. Loading here covers both paths.
 load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+
+def _list_from_env(name, default):
+    """Read a comma-separated env var, trimming whitespace and dropping empties.
+
+    Args:
+        name: Environment variable name.
+        default: Comma-separated fallback used when the variable is unset.
+
+    Returns:
+        A list of non-empty strings.
+    """
+    return [item.strip() for item in os.getenv(name, default).split(",") if item.strip()]
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.8/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# Assina as sessoes do Django e os JWT emitidos em core/authentication.py.
-# Sem valor padrao de proposito: e melhor a aplicacao nao subir do que subir
-# assinando token com um segredo conhecido.
+# Signs Django sessions and the JWTs issued in core/authentication.py.
+# Intentionally has no default: better for the app to refuse to start than to
+# start signing tokens with a known secret.
 SECRET_KEY = os.getenv("SECRET_KEY")
 if not SECRET_KEY:
     raise ImproperlyConfigured(
-        "SECRET_KEY nao definida. Configure no .env local ou nas variaveis de "
-        "ambiente do deploy."
+        "SECRET_KEY is not set. Configure it in the local .env or in the "
+        "deployment environment variables."
     )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+# Accepted Host headers. This used to be ['*'], which accepts any Host and
+# opens the door to header poisoning. ".herokuapp.com" covers the app domain
+# and platform subdomains; localhost covers development.
+ALLOWED_HOSTS = _list_from_env(
+    "ALLOWED_HOSTS",
+    ".herokuapp.com,localhost,127.0.0.1",
+)
 
 AUTH_USER_MODEL = "core.User"
 
@@ -134,15 +153,23 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-CORS_ORIGIN_ALLOW_ALL = True  # enables the frontend to access the backend
-CORS_ALLOW_CREDENTIALS = (
-    True  # enables the frontend to get the cookies created by the backend
+# Origins allowed to call the API. This used to be CORS_ORIGIN_ALLOW_ALL which,
+# combined with CORS_ALLOW_CREDENTIALS, let ANY website issue authenticated
+# requests using the victim's cookie. Env-driven so a new origin can be added
+# without a deploy.
+CORS_ALLOWED_ORIGINS = _list_from_env(
+    "CORS_ALLOWED_ORIGINS",
+    "https://admin.invistapublicidade.com,http://localhost:4200",
 )
 
-# O default do DRF passa a ser FECHADO: toda view exige autenticacao por JWT,
-# a menos que declare o contrario explicitamente. Assim uma view nova nasce
-# protegida, em vez de depender de alguem lembrar de proteger. As excecoes
-# estao marcadas com AllowAny e justificadas caso a caso.
+# Required because authentication travels in a cookie: without this the browser
+# will not send credentials on cross-origin requests.
+CORS_ALLOW_CREDENTIALS = True
+
+# DRF now defaults to CLOSED: every view requires JWT authentication unless it
+# explicitly opts out. This way a new view is born protected instead of relying
+# on someone remembering to protect it. Exceptions are marked with AllowAny and
+# justified case by case.
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "core.authentication.JWTAuthentication",

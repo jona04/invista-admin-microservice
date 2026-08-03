@@ -4,8 +4,8 @@ title: Aplicar autenticação nas views de negócio
 phase: 1
 etapa: "Etapa 2 — Autenticação"
 area: SEC
-status: todo
-completed_at:
+status: done
+completed_at: "2026-08-02 19:34 -03"
 depends_on: [P1-SEC-01]
 blocks: []
 tests: [integration]
@@ -56,19 +56,19 @@ Clientes, chapas, serviços, notas e estoque aceitam `GET`/`POST`/`PUT`/`DELETE`
   - integração — cada endpoint sem cookie devolve 401/403; com cookie válido devolve 200.
 
 ## Definition of Done
-- [ ] `curl` sem cookie contra **todos** os endpoints de negócio: nenhum 200.
-- [ ] `curl` com cookie válido: comportamento idêntico ao anterior.
-- [ ] Painel validado **tela a tela** com login real, incluindo uma escrita.
-- [ ] Default do DRF é fechado; aberturas são explícitas e justificadas.
-- [ ] **Docs atualizados:** doc [04](../../concepts/04_api_contracts.md) com a coluna "Auth" real; doc [11](../../concepts/11_open_issues_and_technical_debt.md) §1 movido para "Já resolvido".
-- [ ] **Banco:** nenhuma.
-- [ ] **Contrato de API:** atualizado.
-- [ ] **Infra:** nenhuma.
-- [ ] **Segredo:** nenhum.
-- [ ] **Frontend:** nenhuma tela alterada — mas todas verificadas.
-- [ ] **Modos de falha mapeados** — tela que chamava sem cookie passa a receber 403: identificar antes pelo levantamento, não pela reclamação do usuário. Requisição do painel sem `withCredentials` quebra mesmo com sessão válida.
-- [ ] **Itens adiados varridos.**
-- [ ] **Auditoria de gambiarras.**
+- [x] `curl` sem cookie contra **todos** os endpoints de negócio: nenhum 200.
+- [x] `curl` com cookie válido: comportamento idêntico ao anterior.
+- [x] Painel validado **tela a tela** com login real, incluindo uma escrita.
+- [x] Default do DRF é fechado; aberturas são explícitas e justificadas.
+- [x] **Docs atualizados:** doc [04](../../concepts/04_api_contracts.md) com a coluna "Auth" real; doc [11](../../concepts/11_open_issues_and_technical_debt.md) §1 movido para "Já resolvido".
+- [x] **Banco:** nenhuma.
+- [x] **Contrato de API:** atualizado.
+- [x] **Infra:** nenhuma.
+- [x] **Segredo:** nenhum.
+- [x] **Frontend:** nenhuma tela alterada — mas todas verificadas.
+- [x] **Modos de falha mapeados** — tela que chamava sem cookie passa a receber 403: identificar antes pelo levantamento, não pela reclamação do usuário. Requisição do painel sem `withCredentials` quebra mesmo com sessão válida.
+- [x] **Itens adiados varridos.**
+- [x] **Auditoria de gambiarras.**
 
 ## Notas / Reconciliações
 

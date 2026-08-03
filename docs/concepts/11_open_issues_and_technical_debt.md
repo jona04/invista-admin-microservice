@@ -8,7 +8,7 @@ Verificado em **02/08/2026**.
 
 ## 🔴 Crítico
 
-### 1. A API não exige autenticação
+### 1. ~~A API não exige autenticação~~ ✅ RESOLVIDO (ago/2026)
 
 A maior parte dos endpoints de negócio expõe `GET`/`POST`/`PUT`/`DELETE` **sem nenhuma credencial**. Clientes, chapas, serviços, notas, estoque e o `register` estão abertos para leitura, criação, alteração e remoção por qualquer pessoa que conheça a URL.
 
@@ -25,7 +25,7 @@ O mecanismo de autenticação **funciona** ([05](./05_authentication_and_securit
 
 **Risco ao corrigir:** se alguma tela do painel chamar a API sem enviar o cookie, ela quebra. Como o fluxo de cookie já funciona nas rotas protegidas, o risco é moderado — mas exige validar tela a tela. O código-fonte do frontend não está disponível (item 4), o que dificulta a conferência prévia.
 
-### 2. CORS liberado com credenciais
+### 2. ~~CORS liberado com credenciais~~ ✅ RESOLVIDO (ago/2026)
 
 ```python
 CORS_ORIGIN_ALLOW_ALL = True
@@ -99,7 +99,7 @@ Contorno documentado em [09](./09_deployment_and_environments.md): subir um Post
 
 [`core/views.py:662`](../../core/views.py#L662) define só `httponly=True`. Sem `secure`, o cookie pode trafegar em HTTP; sem `samesite`, fica exposto a envio cross-site.
 
-### 13. `ALLOWED_HOSTS = ['*']`
+### 13. ~~`ALLOWED_HOSTS = ['*']`~~ ✅ RESOLVIDO (ago/2026)
 
 Aceita qualquer `Host`, abrindo espaço para envenenamento de cabeçalho.
 
@@ -149,6 +149,10 @@ Sincronização manual para o S3 mais invalidação do CloudFront. Sem CI, sem v
 
 | Item | Quando | O que era |
 |---|---|---|
+| **API sem autenticação** | ago/2026 | CRUD de negócio aberto para leitura e escrita. Default do DRF invertido para `IsAuthenticated`; exceções explícitas apenas em `login` e no health check |
+| **`register` e `user` abertos** | ago/2026 | permitiam criar conta sem credencial e, a partir dela, autenticar legitimamente — contornando toda a proteção. Agora exigem autenticação |
+| **CORS liberado com credenciais** | ago/2026 | `CORS_ORIGIN_ALLOW_ALL` + `CORS_ALLOW_CREDENTIALS` permitiam a qualquer site agir como o usuário logado. Substituído por lista explícita vinda do ambiente |
+| **`ALLOWED_HOSTS = ['*']`** | ago/2026 | aceitava qualquer `Host`. Restrito a `.herokuapp.com` + localhost, configurável por ambiente |
 | `SECRET_KEY` hardcoded em repo público | ago/2026 | assinava os JWT; qualquer um forjava token. Movida para o ambiente **e rotacionada** |
 | Módulo WSGI inexistente no `Procfile`/`heroku.yml` | ago/2026 | apontava para `invista_backend.wsgi`; o correto é `app.wsgi` |
 | `gunicorn` ausente do `requirements.txt` | ago/2026 | o deploy não subia |

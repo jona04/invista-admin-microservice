@@ -21,14 +21,68 @@ Docs de referência: [04 — API Contracts](../../concepts/04_api_contracts.md),
 
 ## Tasks
 
+> **Progresso: 4 de 6 tasks concluídas.** A API está fechada — negócio, `register` e `user` exigem credencial; CORS e `ALLOWED_HOSTS` restritos. Faltam as duas de endurecimento (`DEBUG` e cookie).
+
 | # | ID | Task | Etapa | Status | Depende de |
 |---|----|------|-------|--------|-----------|
 | 1 | [P1-SEC-01](./P1-SEC-01-map-frontend-api-calls.md) | Mapear, a partir do bundle, todos os endpoints que o painel realmente chama | 1 | ✅ done | — |
-| 2 | [P1-SEC-02](./P1-SEC-02-enforce-authentication-on-business-views.md) | Aplicar autenticação nas views de negócio (clientes, chapas, serviços, notas, estoque) | 2 | `todo` | P1-SEC-01 |
-| 3 | [P1-SEC-03](./P1-SEC-03-restrict-user-management-endpoints.md) | Fechar `register`, `user` e `user/<scope>` | 2 | `todo` | P1-SEC-01 |
-| 4 | [P1-SEC-04](./P1-SEC-04-restrict-cors-and-allowed-hosts.md) | Restringir CORS a origens conhecidas e tirar o `*` de `ALLOWED_HOSTS` | 3 | `todo` | P1-SEC-01 |
+| 2 | [P1-SEC-02](./P1-SEC-02-enforce-authentication-on-business-views.md) | Aplicar autenticação nas views de negócio (clientes, chapas, serviços, notas, estoque) | 2 | ✅ done | P1-SEC-01 |
+| 3 | [P1-SEC-03](./P1-SEC-03-restrict-user-management-endpoints.md) | Fechar `register`, `user` e `user/<scope>` | 2 | ✅ done | P1-SEC-01 |
+| 4 | [P1-SEC-04](./P1-SEC-04-restrict-cors-and-allowed-hosts.md) | Restringir CORS a origens conhecidas e tirar o `*` de `ALLOWED_HOSTS` | 3 | ✅ done | P1-SEC-01 |
 | 5 | [P1-SEC-05](./P1-SEC-05-debug-from-environment.md) | `DEBUG` por variável de ambiente, `False` por padrão | 3 | `todo` | — |
 | 6 | [P1-SEC-06](./P1-SEC-06-harden-jwt-cookie.md) | Cookie `jwt` com `secure` e `samesite` | 3 | `todo` | P1-SEC-04 |
+
+### O que mudou no código
+
+| Onde | Mudança |
+|---|---|
+| [`app/settings.py`](../../../app/settings.py) | `REST_FRAMEWORK` com default `IsAuthenticated` + `JWTAuthentication`; `CORS_ALLOWED_ORIGINS` e `ALLOWED_HOSTS` vindos do ambiente; `CORS_ORIGIN_ALLOW_ALL` removido |
+| [`app/views.py`](../../../app/views.py) | health check `/` marcado `AllowAny` (é view DRF, seria fechada pelo default) |
+| [`core/views.py`](../../../core/views.py) | `AllowAny` **apenas** no `login`; `register` e `user` passaram a exigir autenticação |
+| [`.env.example`](../../../.env.example) | entradas `CORS_ALLOWED_ORIGINS` e `ALLOWED_HOSTS` |
+
+### Validação
+
+| Verificação | Resultado |
+|---|---|
+| 14 rotas de negócio sem credencial | **403** |
+| `POST` / `DELETE` sem credencial | **403** |
+| 11 rotas de negócio com credencial | **200** |
+| `POST` / `DELETE` com credencial | **201** / **204** |
+| `register`, `user`, `user/<scope>` sem credencial | **403** |
+| `register` com credencial | **200** — criar usuário segue possível |
+| CORS, origem autorizada | `Allow-Origin` + `Allow-Credentials` |
+| CORS, origem maliciosa | nenhum cabeçalho — navegador bloqueia |
+| `Host: evil.com` | **400** |
+| Login e health check | **200** |
+
+Procedimento do ambiente local em [09](../../concepts/09_deployment_and_environments.md).
+
+### O que já está no código (não deployado)
+
+| Onde | Mudança |
+|---|---|
+| [`app/settings.py`](../../../app/settings.py) | `REST_FRAMEWORK` com default `IsAuthenticated` + `JWTAuthentication`; `CORS_ALLOWED_ORIGINS` e `ALLOWED_HOSTS` vindos do ambiente; `CORS_ORIGIN_ALLOW_ALL` removido |
+| [`app/views.py`](../../../app/views.py) | health check `/` marcado `AllowAny` (é view DRF, seria fechada pelo default) |
+| [`core/views.py`](../../../core/views.py) | `AllowAny` **apenas** no `login`; `register` e `user` passaram a exigir autenticação |
+| [`.env.example`](../../../.env.example) | entradas `CORS_ALLOWED_ORIGINS` e `ALLOWED_HOSTS` |
+
+### Validação local (ambiente isolado, produção intocada)
+
+| Verificação | Resultado |
+|---|---|
+| 14 rotas de negócio sem credencial | **403** |
+| `POST` / `DELETE` sem credencial | **403** |
+| 11 rotas de negócio com credencial | **200** |
+| `POST` / `DELETE` com credencial | **201** / **204** |
+| `register`, `user`, `user/<scope>` sem credencial | **403** |
+| `register` com credencial | **200** — criar usuário segue possível |
+| CORS, origem autorizada | `Allow-Origin` + `Allow-Credentials` |
+| CORS, origem maliciosa | nenhum cabeçalho — navegador bloqueia |
+| `Host: evil.com` | **400** |
+| Login e health check | **200** |
+
+Procedimento do ambiente local em [09](../../concepts/09_deployment_and_environments.md).
 
 ## Ordem de execução (sequência)
 
@@ -55,6 +109,15 @@ Onda 3  │ P1-SEC-06
 - ℹ️ **A tela `users` existe mas não consome a API** — insumo para a [Fase 3](../phase-3-login-and-user-management.md).
 
 ## Follow-ups / débitos técnicos
+
+Nenhum foi concluído até aqui — todos seguem abertos, com o destino apontado.
+
 - [ ] Remover o serviço `financeiros` do painel (chamada morta, 404) — origem `P1-SEC-01`. *Quando:* na [Fase 2](../phase-2-frontend-recovery.md), com o fonte em mãos.
 - [ ] Decidir o destino de `/users/`, `/users/<pk>` e `/user/<scope>` (expostos, não usados) — origem `P1-SEC-01`. **Não remover agora:** `users/` é o que a [Fase 3](../phase-3-login-and-user-management.md) vai consumir. *Quando:* ao fechar a Fase 3.
 - [ ] Aproveitar o componente da tela `users` em `P3-FRONT-01` — origem `P1-SEC-01`. → [Fase 3](../phase-3-login-and-user-management.md).
+- [ ] Autorização granular (quem pode apagar nota, quem só lê) — origem `P1-SEC-02`. *Quando:* se surgir necessidade de perfis distintos.
+- [ ] Auditar a tabela de usuários atrás de contas criadas enquanto o `register` esteve aberto — origem `P1-SEC-03`. *Quando:* assim que possível.
+- [ ] Cabeçalhos de segurança (CSP, `X-Content-Type-Options`, HSTS) — origem `P1-SEC-04`. *Quando:* depois da fase.
+
+### Resolvido no meio de outra task
+- [x] Fechar `register` e `user`, que `P1-SEC-02` deixou abertos com `AllowAny` temporário — resolvido por **`P1-SEC-03`**.

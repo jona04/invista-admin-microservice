@@ -4,8 +4,8 @@ title: Fechar os endpoints de usuário
 phase: 1
 etapa: "Etapa 2 — Autenticação"
 area: SEC
-status: todo
-completed_at:
+status: done
+completed_at: "2026-08-02 19:34 -03"
 depends_on: [P1-SEC-01]
 blocks: []
 tests: [integration]
@@ -47,21 +47,38 @@ tests: [integration]
   - integração — `POST /api/admin/register` sem cookie devolve 401/403; `GET /api/admin/user` idem.
 
 ## Definition of Done
-- [ ] `register` não cria usuário sem credencial — verificado com `curl`.
-- [ ] `user` e `user/<scope>` exigem credencial.
-- [ ] Nenhum bloco comentado sugerindo proteção que não existe.
-- [ ] **Docs atualizados:** doc [04](../../concepts/04_api_contracts.md) com a coluna "Auth" real.
-- [ ] **Banco:** nenhuma. · **Infra:** nenhuma. · **Segredo:** nenhum.
-- [ ] **Contrato de API:** atualizado.
-- [ ] **Frontend:** nenhuma tela alterada — verificar que o login segue funcionando.
-- [ ] **Modos de falha mapeados** — se o painel usar `register` em algum fluxo interno, fechá-lo quebra a tela; conferir contra `P1-SEC-01` antes.
-- [ ] **Itens adiados varridos.** · **Auditoria de gambiarras.**
+- [x] `register` não cria usuário sem credencial — verificado com `curl`.
+- [x] `user` e `user/<scope>` exigem credencial.
+- [x] Nenhum bloco comentado sugerindo proteção que não existe.
+- [x] **Docs atualizados:** doc [04](../../concepts/04_api_contracts.md) com a coluna "Auth" real.
+- [x] **Banco:** nenhuma. · **Infra:** nenhuma. · **Segredo:** nenhum.
+- [x] **Contrato de API:** atualizado.
+- [x] **Frontend:** nenhuma tela alterada — verificar que o login segue funcionando.
+- [x] **Modos de falha mapeados** — se o painel usar `register` em algum fluxo interno, fechá-lo quebra a tela; conferir contra `P1-SEC-01` antes.
+- [x] **Itens adiados varridos.** · **Auditoria de gambiarras.**
 
 ## Notas / Reconciliações
-- —
+
+**Implementado e validado em 02/08/2026.**
+
+Bastou remover o `AllowAny` temporário que `P1-SEC-02` havia deixado em `RegisterApiView` e `UserAPIView` — o default fechado do DRF assume a partir daí. O bloco comentado que fingia proteção em `UserAPIView` foi substituído por docstring explicando o regime de acesso.
+
+`user/<scope>` fecha junto, porque compartilha a mesma classe de view.
+
+**Validação local:**
+
+| Verificação | Resultado |
+|---|---|
+| `POST /api/admin/register` sem credencial | **403** |
+| `GET /api/admin/user` sem credencial | **403** |
+| `GET /api/admin/user/<scope>` sem credencial | **403** |
+| `POST /api/admin/register` **com** credencial | **200** — criar usuário segue possível |
+| Login e health check | **200** |
+
+O último item importa: fechar o `register` **não** impede criar usuário, só exige estar autenticado. Quem já tem conta continua criando contas — até a Fase 3 restringir isso a administrador.
 
 ## Auditoria de gambiarras
-- [ ] — nenhuma *(preencher ao executar)*
+- [x] — nenhuma. A task só removeu duas linhas de exceção e trocou comentário morto por docstring.
 
 ## Follow-ups
 - [ ] Se houver usuários criados pelo `register` aberto, auditar a tabela. *Quando:* junto do fechamento. → README da fase.

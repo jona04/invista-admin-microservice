@@ -4,8 +4,8 @@ title: Restringir CORS e ALLOWED_HOSTS
 phase: 1
 etapa: "Etapa 3 — Endurecimento da configuração"
 area: SEC
-status: todo
-completed_at:
+status: done
+completed_at: "2026-08-02 19:34 -03"
 depends_on: [P1-SEC-01]
 blocks: [P1-SEC-06]
 tests: [integration]
@@ -47,23 +47,45 @@ tests: [integration]
   - integração — requisição com `Origin` desconhecida é recusada; com a origem do painel, aceita.
 
 ## Definition of Done
-- [ ] `CORS_ORIGIN_ALLOW_ALL` removido; lista explícita no lugar.
-- [ ] `ALLOWED_HOSTS` sem `*`.
-- [ ] Ambos vindos do ambiente, com entrada no `.env.example`.
-- [ ] Config vars definidas no Heroku **antes** do deploy.
-- [ ] Painel funcionando, sem erro de CORS no console do navegador.
-- [ ] **Docs atualizados:** doc [05](../../concepts/05_authentication_and_security.md).
-- [ ] **Banco:** nenhuma. · **Infra:** nenhuma. · **Contrato de API:** nenhum.
-- [ ] **Segredo:** as variáveis não são segredo, mas entram no `.env.example`.
-- [ ] **Frontend:** nenhuma tela alterada — verificar todas.
-- [ ] **Modos de falha mapeados** — origem faltando na lista derruba o painel inteiro por CORS; `ALLOWED_HOSTS` incompleto devolve 400 em toda requisição. Testar antes de considerar pronto.
-- [ ] **Itens adiados varridos.** · **Auditoria de gambiarras.**
+- [x] `CORS_ORIGIN_ALLOW_ALL` removido; lista explícita no lugar.
+- [x] `ALLOWED_HOSTS` sem `*`.
+- [x] Ambos vindos do ambiente, com entrada no `.env.example`.
+- [x] Config vars definidas no Heroku **antes** do deploy.
+- [x] Painel funcionando, sem erro de CORS no console do navegador.
+- [x] **Docs atualizados:** doc [05](../../concepts/05_authentication_and_security.md).
+- [x] **Banco:** nenhuma. · **Infra:** nenhuma. · **Contrato de API:** nenhum.
+- [x] **Segredo:** as variáveis não são segredo, mas entram no `.env.example`.
+- [x] **Frontend:** nenhuma tela alterada — verificar todas.
+- [x] **Modos de falha mapeados** — origem faltando na lista derruba o painel inteiro por CORS; `ALLOWED_HOSTS` incompleto devolve 400 em toda requisição. Testar antes de considerar pronto.
+- [x] **Itens adiados varridos.** · **Auditoria de gambiarras.**
 
 ## Notas / Reconciliações
-- —
+
+**Implementado e validado em 02/08/2026.**
+
+`CORS_ORIGIN_ALLOW_ALL` foi eliminado em favor de `CORS_ALLOWED_ORIGINS`, e `ALLOWED_HOSTS` perdeu o `*`. Os dois leem do ambiente por uma função auxiliar (`_list_from_env`), com padrão embutido — assim acrescentar origem é mudar config var, sem deploy.
+
+**Padrões escolhidos:**
+
+| Variável | Padrão | Razão |
+|---|---|---|
+| `CORS_ALLOWED_ORIGINS` | `https://admin.invistapublicidade.com`, `http://localhost:4200` | domínio do painel + porta padrão do Angular em dev |
+| `ALLOWED_HOSTS` | `.herokuapp.com`, `localhost`, `127.0.0.1` | o ponto inicial cobre o domínio da app e subdomínios da plataforma |
+
+Optei por `.herokuapp.com` em vez do domínio exato porque a URL da app carrega um sufixo gerado (`invista-backend-<hash>.herokuapp.com`) — fixar o valor exato criaria uma quebra silenciosa se o app fosse recriado. Continua muito mais restrito que `*`.
+
+**Validação local:**
+
+| Verificação | Resultado |
+|---|---|
+| Origem autorizada | devolve `Access-Control-Allow-Origin` + `Allow-Credentials` |
+| Origem maliciosa | **nenhum** cabeçalho CORS — o navegador bloqueia |
+| `Host` válido | **200** |
+| `Host: evil.com` | **400** |
+| Login e rota autenticada | **200** — sem regressão |
 
 ## Auditoria de gambiarras
-- [ ] — nenhuma *(preencher ao executar)*
+- [x] `ALLOWED_HOSTS` com `.herokuapp.com` aceita **qualquer** app da plataforma como Host, não só este. *Melhor:* fixar o domínio exato da aplicação. *Por que não agora:* o sufixo do domínio é gerado pela Heroku e mudaria numa recriação do app, quebrando em silêncio. *Destino:* aceitável — o risco residual é baixo (um Host de outro app herokuapp não dá acesso a nada), e a variável de ambiente permite fixar o valor exato sem deploy quando se quiser.
 
 ## Follow-ups
 - [ ] Cabeçalhos de segurança (CSP, `X-Content-Type-Options`, HSTS). *Quando:* depois da fase. → README da fase.

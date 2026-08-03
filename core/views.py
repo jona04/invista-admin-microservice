@@ -617,10 +617,12 @@ class EstoqueAPIView(APIView):
   
 
 class RegisterApiView(APIView):
-    # ABERTO TEMPORARIAMENTE. Preserva o comportamento atual enquanto esta task
-    # (P1-SEC-02) fecha apenas as views de negocio. Fechar este endpoint e a
-    # P1-SEC-03 — sem ela, qualquer pessoa continua criando conta.
-    permission_classes = [AllowAny]
+    """Create a user account.
+
+    Requires authentication. While this endpoint was open, anyone could create
+    an account and then authenticate legitimately, bypassing the protection on
+    every other view.
+    """
 
     def post(self, request):
         data = request.data
@@ -643,8 +645,12 @@ class RegisterApiView(APIView):
 
 
 class LoginApiView(APIView):
-    # Aberto DEFINITIVAMENTE: e o endpoint que emite a credencial. Exigir
-    # autenticacao aqui tornaria impossivel autenticar.
+    """Authenticate by email and password, issuing a JWT cookie.
+
+    PERMANENTLY open: this is the endpoint that issues the credential, so
+    requiring authentication here would make authenticating impossible.
+    """
+
     permission_classes = [AllowAny]
 
     def post(self, request):
@@ -701,9 +707,10 @@ class LoginApiView(APIView):
     
 
 class UserAPIView(APIView):
-    # ABERTO TEMPORARIAMENTE, pelo mesmo motivo do RegisterApiView acima.
-    # Fechar e limpar este bloco e a P1-SEC-03.
-    permission_classes = [AllowAny]
+    """Return the authenticated user, optionally scoped.
+
+    Requires authentication, relying on the DRF default defined in settings.
+    """
 
     def get(self, request, scope = ''):
         token = request.COOKIES.get('jwt')
