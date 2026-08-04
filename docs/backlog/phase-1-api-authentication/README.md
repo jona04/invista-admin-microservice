@@ -21,7 +21,7 @@ Docs de referência: [04 — API Contracts](../../concepts/04_api_contracts.md),
 
 ## Tasks
 
-> **Progresso: 5 de 6 tasks concluídas.** A API está fechada — negócio, `register` e `user` exigem credencial; CORS e `ALLOWED_HOSTS` restritos; `DEBUG` desligado por padrão. Falta apenas o endurecimento do cookie.
+> **Fase concluída — 6 de 6 tasks.** A API exige credencial em tudo que é negócio, `register` e `user` fechados, CORS e `ALLOWED_HOSTS` restritos, `DEBUG` desligado por padrão e o cookie de autenticação endurecido.
 
 | # | ID | Task | Etapa | Status | Depende de |
 |---|----|------|-------|--------|-----------|
@@ -30,7 +30,7 @@ Docs de referência: [04 — API Contracts](../../concepts/04_api_contracts.md),
 | 3 | [P1-SEC-03](./P1-SEC-03-restrict-user-management-endpoints.md) | Fechar `register`, `user` e `user/<scope>` | 2 | ✅ done | P1-SEC-01 |
 | 4 | [P1-SEC-04](./P1-SEC-04-restrict-cors-and-allowed-hosts.md) | Restringir CORS a origens conhecidas e tirar o `*` de `ALLOWED_HOSTS` | 3 | ✅ done | P1-SEC-01 |
 | 5 | [P1-SEC-05](./P1-SEC-05-debug-from-environment.md) | `DEBUG` por variável de ambiente, `False` por padrão | 3 | ✅ done | — |
-| 6 | [P1-SEC-06](./P1-SEC-06-harden-jwt-cookie.md) | Cookie `jwt` com `secure` e `samesite` | 3 | `todo` | P1-SEC-04 |
+| 6 | [P1-SEC-06](./P1-SEC-06-harden-jwt-cookie.md) | Cookie `jwt` com `secure` e `samesite` | 3 | ✅ done | P1-SEC-04 |
 
 ### O que mudou no código
 
@@ -38,8 +38,9 @@ Docs de referência: [04 — API Contracts](../../concepts/04_api_contracts.md),
 |---|---|
 | [`app/settings.py`](../../../app/settings.py) | `REST_FRAMEWORK` com default `IsAuthenticated` + `JWTAuthentication`; `CORS_ALLOWED_ORIGINS`, `ALLOWED_HOSTS` e `DEBUG` vindos do ambiente; `CORS_ORIGIN_ALLOW_ALL` removido |
 | [`app/views.py`](../../../app/views.py) | health check `/` marcado `AllowAny` (é view DRF, seria fechada pelo default) |
-| [`core/views.py`](../../../core/views.py) | `AllowAny` **apenas** no `login`; `register` e `user` passaram a exigir autenticação |
-| [`.env.example`](../../../.env.example) | entradas `DEBUG`, `CORS_ALLOWED_ORIGINS` e `ALLOWED_HOSTS` |
+| [`core/views.py`](../../../core/views.py) | `AllowAny` **apenas** no `login`; `register` e `user` passaram a exigir autenticação; cookie via helper |
+| [`core/authentication.py`](../../../core/authentication.py) | `set_jwt_cookie` / `clear_jwt_cookie` — atributos do cookie num só lugar |
+| [`.env.example`](../../../.env.example) | entradas `DEBUG`, `CORS_ALLOWED_ORIGINS`, `ALLOWED_HOSTS`, `JWT_COOKIE_SECURE` e `JWT_COOKIE_SAMESITE` |
 
 ### Validação
 
@@ -57,6 +58,9 @@ Docs de referência: [04 — API Contracts](../../concepts/04_api_contracts.md),
 | Login e health check | **200** |
 | 404 com `DEBUG=False` | **178 bytes**, sem `URLconf` nem lista de rotas |
 | 404 com `DEBUG=True` | **2331 bytes**, expõe `app.urls` e as rotas `api/admin` |
+| Cookie no login (produção) | `HttpOnly; SameSite=None; Secure` |
+| Cookie no logout | atributos **idênticos** ao login |
+| Ciclo login → logout → reuso do cookie | **403** — token revogado |
 
 Procedimento do ambiente local em [09](../../concepts/09_deployment_and_environments.md).
 
@@ -95,6 +99,7 @@ Nenhum foi concluído até aqui — todos seguem abertos, com o destino apontado
 - [ ] Auditar a tabela de usuários atrás de contas criadas enquanto o `register` esteve aberto — origem `P1-SEC-03`. *Quando:* assim que possível.
 - [ ] Cabeçalhos de segurança (CSP, `X-Content-Type-Options`, HSTS) — origem `P1-SEC-04`. *Quando:* depois da fase.
 - [ ] Servir os estáticos do Django admin em produção (whitenoise ou equivalente) — origem `P1-SEC-05`. Com `DEBUG=False` o Django deixa de servi-los. *Quando:* se alguém precisar do `/admin/`.
+- [ ] Avaliar colocar painel e API sob o mesmo domínio (CloudFront com origem no Heroku) — origem `P1-SEC-06`. Permitiria `SameSite=Lax` e dispensaria CORS. *Quando:* se a topologia for revista.
 
 ### Resolvido no meio de outra task
 - [x] Fechar `register` e `user`, que `P1-SEC-02` deixou abertos com `AllowAny` temporário — resolvido por **`P1-SEC-03`**.

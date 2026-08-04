@@ -95,7 +95,7 @@ Contorno documentado em [09](./09_deployment_and_environments.md): subir um Post
 
 `Chapa.valor`, `Servico.valor_total_servico`, `Nota.valor_total_nota`, `Nota.desconto` usam ponto flutuante binário — erro de arredondamento acumula em soma. Só `EntradaChapa.valor_unitario` usa `DecimalField`. Ver [03](./03_domain_model.md).
 
-### 12. Cookie sem `secure` nem `samesite`
+### 12. ~~Cookie sem `secure` nem `samesite`~~ ✅ RESOLVIDO (ago/2026)
 
 [`core/views.py:662`](../../core/views.py#L662) define só `httponly=True`. Sem `secure`, o cookie pode trafegar em HTTP; sem `samesite`, fica exposto a envio cross-site.
 
@@ -153,6 +153,7 @@ Sincronização manual para o S3 mais invalidação do CloudFront. Sem CI, sem v
 | **`register` e `user` abertos** | ago/2026 | permitiam criar conta sem credencial e, a partir dela, autenticar legitimamente — contornando toda a proteção. Agora exigem autenticação |
 | **CORS liberado com credenciais** | ago/2026 | `CORS_ORIGIN_ALLOW_ALL` + `CORS_ALLOW_CREDENTIALS` permitiam a qualquer site agir como o usuário logado. Substituído por lista explícita vinda do ambiente |
 | **`DEBUG = True` em produção** | ago/2026 | qualquer 404 devolvia o **mapa completo de rotas da API** (2331 bytes citando `app.urls` e as rotas `api/admin`), além de stack trace em erros. Agora vem do ambiente com padrão `False` |
+| **Cookie sem `secure` nem `samesite`** | ago/2026 | trafegava em HTTP e ficava exposto a envio cross-site. Atributos centralizados em helper, com padrão `Secure` + `SameSite=None` |
 | **`ALLOWED_HOSTS = ['*']`** | ago/2026 | aceitava qualquer `Host`. Restrito a `.herokuapp.com` + localhost, configurável por ambiente |
 | `SECRET_KEY` hardcoded em repo público | ago/2026 | assinava os JWT; qualquer um forjava token. Movida para o ambiente **e rotacionada** |
 | Módulo WSGI inexistente no `Procfile`/`heroku.yml` | ago/2026 | apontava para `invista_backend.wsgi`; o correto é `app.wsgi` |

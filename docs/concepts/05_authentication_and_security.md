@@ -17,7 +17,8 @@ Implementado em [`core/authentication.py`](../../core/authentication.py) como um
    { "user_id": <id>, "scope": "admin", "exp": <agora+1dia>, "iat": <agora> }
    ```
 6. Persiste em `UserToken` com `expired_at = agora + 1 dia`.
-7. Devolve o token **no cookie `jwt` (`httponly`)** e também no corpo da resposta.
+7. Devolve o token **no cookie `jwt`** e também no corpo da resposta. Os atributos do cookie
+   (`HttpOnly`, `Secure`, `SameSite`) são aplicados por `set_jwt_cookie` — ver "O cookie" abaixo.
 
 ### Validação
 
@@ -70,26 +71,48 @@ Corrigido em duas etapas: mover para variável de ambiente e **rotacionar** o va
 
 Lição registrada: chave vazada em repositório **não se resolve movendo para o ambiente**. Só se resolve **rotacionando**. Mover impede vazamentos futuros; rotacionar fecha o que já vazou.
 
+## O cookie
+
+O token viaja num cookie cujos atributos ficam **num único lugar** —
+`set_jwt_cookie` e `clear_jwt_cookie`, em [`core/authentication.py`](../../core/authentication.py):
+
+| Atributo | Valor em produção | Por quê |
+|---|---|---|
+| `HttpOnly` | sempre | o JWT não é acessível por JavaScript |
+| `Secure` | `True` (`JWT_COOKIE_SECURE`) | só trafega sobre HTTPS |
+| `SameSite` | `None` (`JWT_COOKIE_SAMESITE`) | painel e API estão em domínios diferentes, então toda chamada autenticada é cross-site |
+
+`SameSite=None` **só é aceito junto de `Secure`** — os dois andam juntos. Em desenvolvimento local, sobre HTTP, o `.env` relaxa para `False` / `Lax`.
+
+### Por que existe um helper em vez de chamar `set_cookie` direto
+
+O `delete_cookie` do Django **não envia `Secure`** para cookie sem prefixo `__Secure-`:
+
+```python
+def delete_cookie(self, key, path="/", domain=None, samesite=None):
+    secure = key.startswith(("__Secure-", "__Host-"))
+```
+
+Como o navegador rejeita `SameSite=None` sem `Secure`, o logout emitiria uma remoção que o navegador descarta — a sessão continuaria viva no cliente, **sem erro nenhum**. O helper usa `set_cookie` com expiração imediata nos dois casos, garantindo atributos idênticos na emissão e na remoção.
+
 ## Postura de segurança atual
 
 O que **está** bem:
 
+- **O default do DRF é fechado** (`IsAuthenticated`): uma view nova nasce protegida, e cada abertura é um `AllowAny` explícito e justificado na docstring. Hoje só o `login` e o health check estão abertos.
 - Segredo fora do código, sem default, com falha explícita.
-- Cookie `httponly` — o JWT não é acessível por JavaScript.
+- Cookie `HttpOnly` + `Secure` + `SameSite` — inacessível por JavaScript e restrito ao tráfego HTTPS.
 - Revogação real via `UserToken`, com expiração de 1 dia.
 - Senha com hash do Django (`check_password`).
+- **CORS restrito** a origens conhecidas e `ALLOWED_HOSTS` sem `*`, ambos vindos do ambiente.
+- **`DEBUG` desligado por padrão** — o valor inseguro precisa ser escolhido.
 - Bucket do frontend **privado**, acessível só pelo CloudFront via OAC ([07](./07_aws_infrastructure.md)).
 
 O que **não** está — detalhado em [11](./11_open_issues_and_technical_debt.md):
 
 | Problema | Gravidade |
 |---|---|
-| **Maior parte da API sem autenticação** — CRUD aberto sobre os dados de negócio | 🔴 crítica |
-| `DEBUG = True` em produção — stack trace com código e configuração | 🟠 alta |
-| `CORS_ORIGIN_ALLOW_ALL = True` | 🟡 média |
-| `ALLOWED_HOSTS = ['*']` | 🟡 média |
 | `AuthMiddleware` que não autentica nada e engole exceções | 🟠 alta |
-| Cookie sem `secure` / `samesite` explícitos | 🟡 média |
 
 ## Ao introduzir configuração sensível
 

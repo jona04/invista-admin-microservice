@@ -9,7 +9,12 @@ from collections import defaultdict
 from django.db.models import Count, Sum
 from django.db.models.functions import TruncDate
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from .authentication import JWTAuthentication
+from .authentication import (
+    JWTAuthentication,
+    JWT_COOKIE_NAME,
+    clear_jwt_cookie,
+    set_jwt_cookie,
+)
 import datetime
 
 from .services import UserService
@@ -674,7 +679,7 @@ class LoginApiView(APIView):
         token = JWTAuthentication.generate_jwt(user.id, scope)
 
         response = Response()
-        response.set_cookie(key='jwt', value=token, httponly=True)
+        set_jwt_cookie(response, token)
 
         UserToken.objects.create(
             user_id=user.id,
@@ -713,7 +718,7 @@ class UserAPIView(APIView):
     """
 
     def get(self, request, scope = ''):
-        token = request.COOKIES.get('jwt')
+        token = request.COOKIES.get(JWT_COOKIE_NAME)
         
         if not token:
             raise exceptions.AuthenticationFailed('Nao autenticado')
@@ -749,14 +754,14 @@ class LogoutAPIView(APIView):
     permission_classes = [IsAuthenticated]
     
     def post(self, request):
-        token = request.COOKIES.get('jwt')
+        token = request.COOKIES.get(JWT_COOKIE_NAME)
         if not token:
             raise exceptions.AuthenticationFailed('Nao autenticado')
         payload = JWTAuthentication.get_payload(token)
         UserToken.objects.filter(user_id=payload['user_id']).delete()
         
         response = Response()
-        response.delete_cookie(key='jwt')
+        clear_jwt_cookie(response)
         response.data = {
             'message': 'Success'
         }

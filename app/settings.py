@@ -183,6 +183,15 @@ CORS_ALLOWED_ORIGINS = _list_from_env(
 # will not send credentials on cross-origin requests.
 CORS_ALLOW_CREDENTIALS = True
 
+# Attributes of the authentication cookie. The panel and the API live on
+# different sites (CDN host vs application host), so every authenticated call
+# is cross-site and the browser only sends the cookie when SameSite=None. That
+# combination is only accepted alongside Secure, which requires HTTPS — hence
+# both default to the production-safe values and are relaxed via environment
+# for local development over plain HTTP.
+JWT_COOKIE_SECURE = _bool_from_env("JWT_COOKIE_SECURE", "True")
+JWT_COOKIE_SAMESITE = os.getenv("JWT_COOKIE_SAMESITE", "None")
+
 # DRF now defaults to CLOSED: every view requires JWT authentication unless it
 # explicitly opts out. This way a new view is born protected instead of relying
 # on someone remembering to protect it. Exceptions are marked with AllowAny and
