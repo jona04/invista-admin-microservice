@@ -70,3 +70,22 @@ resource "aws_cloudfront_distribution" "admin" {
     }
   }
 }
+
+# Publicar um build novo troca o index.html, que e o unico arquivo servido sob
+# nome fixo — e portanto o unico que o CloudFront guarda em cache sob esse
+# nome. Os demais arquivos carregam hash de conteudo e ganham nome novo a cada
+# build, entao dispensam invalidacao. Sem este passo o CDN continua entregando
+# o index anterior, que aponta para o bundle antigo, e o deploy fica invisivel.
+resource "terraform_data" "frontend_invalidation" {
+  triggers_replace = [aws_s3_object.frontend["index.html"].etag]
+
+  provisioner "local-exec" {
+    command = join(" ", [
+      "aws cloudfront create-invalidation",
+      "--distribution-id ${aws_cloudfront_distribution.admin.id}",
+      "--paths '/index.html' '/'",
+      "--profile ${var.aws_profile}",
+      "--output text --query 'Invalidation.Status'",
+    ])
+  }
+}
