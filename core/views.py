@@ -297,13 +297,17 @@ class NotaFullGenericAPIView(generics.GenericAPIView,
         return self.retrieve(request, pk)
 
 
-class NotaGenericAPIView(generics.GenericAPIView, 
+class NotaGenericAPIView(generics.GenericAPIView,
                         mixins.RetrieveModelMixin,
                         mixins.ListModelMixin,
                         mixins.CreateModelMixin,
                         mixins.UpdateModelMixin,
                         mixins.DestroyModelMixin):
-    queryset = Nota.objects.all()
+    # The serializer exposes the "servico" many-to-many field, so without
+    # prefetching Django issues one extra query per row. Listing every note
+    # meant tens of thousands of queries and the request died on the platform's
+    # 30 second limit. Prefetching collapses it to two queries.
+    queryset = Nota.objects.all().prefetch_related("servico")
     serializer_class = NotaSerializer
 
     # @method_decorator(cache_page(60*60*2, key_prefix='notas_frontend'))
@@ -654,8 +658,16 @@ class LoginApiView(APIView):
 
     PERMANENTLY open: this is the endpoint that issues the credential, so
     requiring authentication here would make authenticating impossible.
+
+    authentication_classes is emptied on purpose, and it is not redundant with
+    AllowAny. Authentication runs BEFORE permissions, so a stale or revoked
+    cookie still in the browser would make the authenticator raise and the
+    request would die with 403 before AllowAny was ever consulted. The user
+    would be locked out with no way back in, since clearing the cookie is
+    exactly what logging in again is supposed to do.
     """
 
+    authentication_classes = []
     permission_classes = [AllowAny]
 
     def post(self, request):

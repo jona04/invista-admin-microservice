@@ -110,11 +110,14 @@ class JWTAuthentication(BaseAuthentication):
             The decoded payload dictionary.
 
         Raises:
-            AuthenticationFailed: The token has expired.
+            AuthenticationFailed: The token is expired, malformed or carries an
+                invalid signature. Catching the whole InvalidTokenError family
+                matters: a corrupted cookie used to escape as an unhandled
+                exception and surface as a 500.
         """
         try:
             payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-        except jwt.ExpiredSignatureError:
+        except jwt.InvalidTokenError:
             raise exceptions.AuthenticationFailed('nao autenticado')
 
         return payload
